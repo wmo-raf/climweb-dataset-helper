@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+recursive-include dataset_helper *.py
+recursive-include dataset_helper/templates *
+recursive-include dataset_helper/static *
+recursive-include dataset_helper *.html
+recursive-include dataset_helper/locale *.po *.mo

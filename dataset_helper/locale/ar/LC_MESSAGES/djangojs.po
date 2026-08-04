@@ -1,0 +1,571 @@
+# Arabic translations for the dataset_helper JS catalog.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: dataset-helper-plugin 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-20 12:00+0000\n"
+"PO-Revision-Date: 2026-05-20 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Delete all Climweb Datasets that this plugin provisioned?"
+msgstr "حذف جميع مجموعات بيانات Climweb التي وفّرها هذا المكوّن؟"
+
+msgid "Datasets created outside the plugin will be kept."
+msgstr "سيتم الاحتفاظ بمجموعات البيانات التي أُنشئت خارج المكوّن."
+
+msgid "Catalog entries will be reset to pending_add."
+msgstr "ستُعاد إدخالات الكتالوج إلى pending_add."
+
+msgid "This action cannot be undone."
+msgstr "لا يمكن التراجع عن هذا الإجراء."
+
+msgid "Clearing…"
+msgstr "جارٍ الحذف…"
+
+msgid "Catalog datasets cleared"
+msgstr "تم حذف مجموعات بيانات الكتالوج"
+
+msgid "Datasets Deleted"
+msgstr "مجموعات بيانات محذوفة"
+
+msgid "Metadata Deleted"
+msgstr "بيانات وصفية محذوفة"
+
+msgid "Empty SubCategories Swept"
+msgstr "فئات فرعية فارغة منظَّفة"
+
+msgid "Empty Categories Swept"
+msgstr "فئات فارغة منظَّفة"
+
+msgid "Catalog Entries Reset"
+msgstr "إدخالات الكتالوج المعاد ضبطها"
+
+msgid ""
+"Datasets, SubCategories and Categories that did not come from this plugin "
+"were preserved."
+msgstr ""
+"تم الاحتفاظ بمجموعات البيانات والفئات الفرعية والفئات غير المُدارة من هذا "
+"المكوّن."
+
+msgid "Refresh the page"
+msgstr "تحديث الصفحة"
+
+msgid "to see the updated state."
+msgstr "لعرض الحالة المحدَّثة."
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "Clear failed"
+msgstr "فشل الحذف"
+
+msgid "Are you sure you want to delete ALL datasets, subcategories, and categories?"
+msgstr "هل أنت متأكد من حذف جميع مجموعات البيانات والفئات الفرعية والفئات؟"
+
+msgid "This action CANNOT be undone!"
+msgstr "هذا الإجراء لا يمكن التراجع عنه!"
+
+msgid "This is your LAST CHANCE to cancel."
+msgstr "هذه فرصتك الأخيرة للإلغاء."
+
+msgid "Click OK to permanently delete all data, or Cancel to abort."
+msgstr "انقر على «موافق» لحذف جميع البيانات نهائيًا، أو «إلغاء» للإيقاف."
+
+msgid "Clearing..."
+msgstr "جارٍ الحذف…"
+
+msgid "%(count)s item(s) could not be deleted:"
+msgstr "تعذّر حذف %(count)s عنصر/عناصر:"
+
+msgid "Completed with some errors"
+msgstr "اكتمل مع بعض الأخطاء"
+
+msgid "All data cleared successfully!"
+msgstr "تم حذف جميع البيانات بنجاح!"
+
+msgid "Categories Deleted"
+msgstr "فئات محذوفة"
+
+msgid "Subcategories Deleted"
+msgstr "فئات فرعية محذوفة"
+
+msgid "WMS Layers Deleted"
+msgstr "طبقات WMS محذوفة"
+
+msgid "Clear All Datasets & Categories"
+msgstr "حذف كل مجموعات البيانات والفئات"
+
+msgid "Set the required Country setting first"
+msgstr "اضبط أولًا إعداد الدولة الإلزامي"
+
+msgid "Please pick a country before saving"
+msgstr "اختر دولة قبل الحفظ"
+
+msgid "Fetching country info…"
+msgstr "جلب معلومات الدولة…"
+
+msgid "Could not fetch country info: "
+msgstr "تعذّر جلب معلومات الدولة: "
+
+msgid "Saving..."
+msgstr "جارٍ الحفظ…"
+
+msgid "Settings saved"
+msgstr "تم حفظ الإعدادات"
+
+msgid "Select a country"
+msgstr "اختر دولة"
+
+msgid "Failed to load English locale"
+msgstr "فشل تحميل اللغة الإنجليزية"
+
+msgid "Failed to load countries"
+msgstr "فشل تحميل الدول"
+
+msgid "Could not load country list"
+msgstr "تعذّر تحميل قائمة الدول"
+
+msgid "none"
+msgstr "بدون"
+
+msgid "Country"
+msgstr "الدولة"
+
+msgid "Bounding box:"
+msgstr "صندوق الإحاطة:"
+
+msgid "Failed to fetch country info:"
+msgstr "فشل جلب معلومات الدولة:"
+
+msgid "(no version)"
+msgstr "(بدون إصدار)"
+
+msgid "Review catalog update — %(from)s → %(to)s"
+msgstr "مراجعة تحديث الكتالوج — %(from)s ← %(to)s"
+
+msgid "Nothing has been written yet. Pick an apply mode or cancel."
+msgstr "لم يُكتَب شيء بعد. اختر وضع التطبيق أو الإلغاء."
+
+msgid "new"
+msgstr "جديد"
+
+msgid "updated"
+msgstr "محدَّث"
+
+msgid "local drift"
+msgstr "انحراف محلي"
+
+msgid "conflict"
+msgstr "تعارض"
+
+msgid "conflicts"
+msgstr "تعارضات"
+
+msgid "to remove"
+msgstr "للحذف"
+
+msgid "unchanged"
+msgstr "دون تغيير"
+
+msgid "Conflicts (catalog changed AND Wagtail edited)"
+msgstr "تعارضات (تغيّر الكتالوج وتعديل في Wagtail)"
+
+msgid "New entries to add"
+msgstr "إدخالات جديدة للإضافة"
+
+msgid "Clean updates (catalog moved, no local edits)"
+msgstr "تحديثات نظيفة (تغيّر الكتالوج، بلا تعديلات محلية)"
+
+msgid "Local drift (Wagtail-edited, catalog unchanged)"
+msgstr "انحراف محلي (تم التعديل في Wagtail، الكتالوج دون تغيير)"
+
+msgid "To remove (gone from catalog source)"
+msgstr "للحذف (غير موجود في مصدر الكتالوج)"
+
+msgid "Errors"
+msgstr "الأخطاء"
+
+msgid "Nothing to apply — catalog and database are in sync."
+msgstr "لا شيء للتطبيق — الكتالوج وقاعدة البيانات متزامنان."
+
+msgid "Apply — keep %(count)s local edit"
+msgstr "تطبيق — الاحتفاظ بـ %(count)s تعديل محلي"
+
+msgid "Apply — keep %(count)s local edits"
+msgstr "تطبيق — الاحتفاظ بـ %(count)s تعديلات محلية"
+
+msgid "Apply changes"
+msgstr "تطبيق التغييرات"
+
+msgid "Apply — overwrite %(count)s conflict"
+msgstr "تطبيق — استبدال %(count)s تعارض"
+
+msgid "Apply — overwrite %(count)s conflicts"
+msgstr "تطبيق — استبدال %(count)s تعارضات"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "Computing changeset…"
+msgstr "احتساب التغييرات…"
+
+msgid "Preview failed"
+msgstr "فشلت المعاينة"
+
+msgid "Close"
+msgstr "إغلاق"
+
+msgid "Preview failed:"
+msgstr "فشلت المعاينة:"
+
+msgid "Applying changes (%(policy)s)…"
+msgstr "تطبيق التغييرات (%(policy)s)…"
+
+msgid "Catalog loaded"
+msgstr "تم تحميل الكتالوج"
+
+msgid "Apply failed"
+msgstr "فشل التطبيق"
+
+msgid "Apply failed: "
+msgstr "فشل التطبيق: "
+
+msgid "No catalog loaded yet. Bundled catalog: <strong>v%(version)s</strong>."
+msgstr ""
+"لا يوجد كتالوج مُحمَّل بعد. الكتالوج المضمَّن: <strong>v%(version)s</"
+"strong>."
+
+msgid "Review changes"
+msgstr "مراجعة التغييرات"
+
+msgid "A catalog update is available: <strong>v%(from)s</strong> → <strong>v%(to)s</strong>. "
+msgstr ""
+"يتوفر تحديث للكتالوج: <strong>v%(from)s</strong> ← <strong>v%(to)s</"
+"strong>. "
+
+msgid "Review the changeset before applying — entries you edited in Wagtail can be kept."
+msgstr ""
+"راجع التغييرات قبل التطبيق — يمكن الاحتفاظ بالإدخالات التي عدّلتها في "
+"Wagtail."
+
+msgid "Catalog <strong>v%(version)s</strong> · loaded %(date)s"
+msgstr "الكتالوج <strong>v%(version)s</strong> · حُمِّل %(date)s"
+
+msgid "Catalog <strong>v%(version)s</strong> loaded"
+msgstr "تم تحميل الكتالوج <strong>v%(version)s</strong>"
+
+msgid "Catalog is empty"
+msgstr "الكتالوج فارغ"
+
+msgid "Load a JSON config or add layers manually to get started."
+msgstr "حمّل تهيئة JSON أو أضف طبقات يدويًا للبدء."
+
+msgid "Check/uncheck all layers in this category"
+msgstr "تحديد/إلغاء تحديد جميع طبقات هذه الفئة"
+
+msgid "%(enabled)s/%(total)s enabled"
+msgstr "%(enabled)s/%(total)s مُفعَّلة"
+
+msgid "Check/uncheck all layers in this subcategory"
+msgstr "تحديد/إلغاء تحديد جميع طبقات هذه الفئة الفرعية"
+
+msgid "Enable/disable this layer"
+msgstr "تفعيل/تعطيل هذه الطبقة"
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "Layer name"
+msgstr "اسم الطبقة"
+
+msgid "WMS URL"
+msgstr "رابط WMS"
+
+msgid "Tile URL"
+msgstr "رابط التجزئات"
+
+msgid "File URL"
+msgstr "رابط الملف"
+
+msgid "Source"
+msgstr "المصدر"
+
+msgid "Function"
+msgstr "الوظيفة"
+
+msgid "Resolution"
+msgstr "الدقة"
+
+msgid "Coverage"
+msgstr "التغطية"
+
+msgid "Update freq."
+msgstr "تكرار التحديث"
+
+msgid "License"
+msgstr "الترخيص"
+
+msgid "Multi-temporal"
+msgstr "متعدد الأزمنة"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Origin"
+msgstr "المصدر"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Learn more"
+msgstr "اعرف المزيد"
+
+msgid "WMS Preview"
+msgstr "معاينة WMS"
+
+msgid "Preview not available"
+msgstr "المعاينة غير متاحة"
+
+msgid "WMS preview"
+msgstr "معاينة WMS"
+
+msgid "Reset the entire catalog?"
+msgstr "إعادة ضبط الكتالوج بالكامل؟"
+
+msgid "• %(count)s catalog entries will be deleted (config, manual, wms_import)."
+msgstr "• سيتم حذف %(count)s إدخالات من الكتالوج (config، manual، wms_import)."
+
+msgid "• ~%(count)s Climweb Dataset(s) provisioned by the plugin will be removed."
+msgstr "• سيتم حذف ~%(count)s مجموعة بيانات Climweb وفّرها المكوّن."
+
+msgid "• Categories, SubCategories and Datasets not managed by the plugin are kept."
+msgstr ""
+"• يتم الاحتفاظ بالفئات والفئات الفرعية ومجموعات البيانات غير المُدارة من "
+"المكوّن."
+
+msgid "Resetting..."
+msgstr "إعادة الضبط…"
+
+msgid "Reset failed: "
+msgstr "فشلت إعادة الضبط: "
+
+msgid "Syncing..."
+msgstr "جارٍ المزامنة…"
+
+msgid "Warnings:"
+msgstr "تنبيهات:"
+
+msgid "Sync failed: "
+msgstr "فشلت المزامنة: "
+
+msgid "Please fill in all required fields (*)."
+msgstr "املأ جميع الحقول الإلزامية (*)."
+
+msgid "Please enter a WMS URL."
+msgstr "أدخل رابط WMS."
+
+msgid "Fetching..."
+msgstr "جارٍ الجلب…"
+
+msgid "%(count)s layers from %(url)s"
+msgstr "%(count)s طبقات من %(url)s"
+
+msgid "Failed to fetch capabilities: "
+msgstr "فشل جلب capabilities: "
+
+msgid "Fetch Layers"
+msgstr "جلب الطبقات"
+
+msgid "No layers found"
+msgstr "لم يتم العثور على أي طبقات"
+
+msgid "Please fill in Category and Subcategory."
+msgstr "املأ الفئة والفئة الفرعية."
+
+msgid "Added \"%(name)s\" to catalog."
+msgstr "تمت إضافة «%(name)s» إلى الكتالوج."
+
+msgid "Configure selected layer"
+msgstr "تهيئة الطبقة المختارة"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgid "Category"
+msgstr "الفئة"
+
+msgid "e.g. Environment"
+msgstr "مثال: البيئة"
+
+msgid "Subcategory"
+msgstr "الفئة الفرعية"
+
+msgid "e.g. Observation"
+msgstr "مثال: ملاحظة"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Add to Catalog"
+msgstr "إضافة إلى الكتالوج"
+
+msgid "Back to list"
+msgstr "العودة إلى القائمة"
+
+msgid "Invalid JSON: "
+msgstr "JSON غير صالح: "
+
+msgid "Loading config..."
+msgstr "جارٍ تحميل التهيئة…"
+
+msgid "Load failed: "
+msgstr "فشل التحميل: "
+
+# ── Admin Boundaries ─────────────────────────────────────────────────────────
+
+msgid "Failed to load status"
+msgstr "فشل تحميل الحالة"
+
+msgid "The boundary manager is not available in this instance."
+msgstr "مدير الحدود غير متوفر في هذه النسخة."
+
+msgid "No country configured. Set the country on the Settings tab first."
+msgstr "لا يوجد بلد مُهيأ. عيّن البلد أولاً في تبويب الإعدادات."
+
+msgid "No boundaries loaded yet for this country."
+msgstr "لم يتم تحميل أي حدود لهذا البلد بعد."
+
+msgid "Level"
+msgstr "المستوى"
+
+msgid "Admin level"
+msgstr "المستوى الإداري"
+
+msgid "Features"
+msgstr "المعالم"
+
+msgid "Map library could not be loaded."
+msgstr "تعذّر تحميل مكتبة الخرائط."
+
+msgid "Importing…"
+msgstr "جارٍ الاستيراد…"
+
+msgid "Downloading and loading boundaries — this can take a while…"
+msgstr "تنزيل وتحميل الحدود — قد يستغرق ذلك بعض الوقت…"
+
+msgid "features"
+msgstr "معلمًا"
+
+msgid "failed"
+msgstr "فشل"
+
+msgid "Import failed"
+msgstr "فشل الاستيراد"
+
+msgid "Delete all admin boundaries for the configured country?"
+msgstr "حذف جميع الحدود الإدارية للبلد المُهيأ؟"
+
+# ── Settings tab gating ──
+
+msgid "Complete the required settings first"
+msgstr "أكمل الإعدادات المطلوبة أولاً"
+
+# ── Added: catalog redesign (JS) ──
+
+msgid "%(n)s to create"
+msgstr "%(n)s للإنشاء"
+
+msgid "%(n)s to remove"
+msgstr "%(n)s للإزالة"
+
+msgid "%(n)s to update"
+msgstr "%(n)s للتحديث"
+
+msgid "Auto-update interval"
+msgstr "فترة التحديث التلقائي"
+
+msgid "Catalog <b>v%(v)s</b>"
+msgstr "الكتالوج <b>v%(v)s</b>"
+
+msgid "Catalog out of sync with Climweb"
+msgstr "الكتالوج غير متزامن مع Climweb"
+
+msgid "Disabled"
+msgstr "معطّلة"
+
+msgid "Initially visible"
+msgstr "ظاهرة في البداية"
+
+msgid "Load failed"
+msgstr "فشل التحميل"
+
+msgid "Loading catalog…"
+msgstr "جارٍ تحميل الكتالوج…"
+
+msgid "Near real-time"
+msgstr "شبه آني"
+
+msgid "Synced"
+msgstr "متزامنة"
+
+msgid "Synchronize with Climweb"
+msgstr "المزامنة مع Climweb"
+
+msgid "To add"
+msgstr "للإضافة"
+
+msgid "To remove"
+msgstr "للإزالة"
+
+msgid "loaded %(d)s"
+msgstr "حُمّل في %(d)s"
+
+msgid "min"
+msgstr "د"
+
+msgid "not loaded"
+msgstr "غير مُحمَّل"
+
+msgid "removed"
+msgstr "محذوفة"
+
+msgid "%(n)s pending change"
+msgid_plural "%(n)s pending changes"
+msgstr[0] "%(n)s تغيير معلّق"
+msgstr[1] "%(n)s تغييرات معلّقة"
+
+# ── Added: layer tree controls/detail ──
+
+msgid "Climweb options"
+msgstr "خيارات Climweb"
+
+msgid "GetMap preview"
+msgstr "معاينة GetMap"
+
+msgid "No layer matches your search."
+msgstr "لا توجد طبقة تطابق بحثك."
+
+msgid "Popup"
+msgstr "نافذة منبثقة"
+
+msgid "Provider"
+msgstr "المزوّد"
+
+msgid "Service URL"
+msgstr "رابط الخدمة"
+
+msgid "WMS legend"
+msgstr "وسيلة إيضاح WMS"
+
+msgid "enabled"
+msgstr "مفعّلة"

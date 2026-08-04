@@ -1,0 +1,953 @@
+# French translations for the dataset_helper.
+# Copyright (C) 2026
+# This file is distributed under the same license as the dataset_helper package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: dataset-helper-plugin 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-20 12:31+0000\n"
+"PO-Revision-Date: 2026-05-20 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# ── models.py / PluginSettings ───────────────────────────────────────────────
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Language for imported catalog labels"
+msgstr "Langue pour les libellés du catalogue importé"
+
+msgid "ECMWF API Token"
+msgstr "Token API ECMWF"
+
+#, python-brace-format
+msgid ""
+"Token for ECMWF eccharts WMS service. Leave empty to keep public layers "
+"using token=public and skip private layers (token={ECMWF_TOKEN})."
+msgstr ""
+"Token pour le service WMS ECMWF eccharts. Laissez vide pour ne garder que "
+"les couches publiques (token=public) et ignorer les couches privées "
+"(token={ECMWF_TOKEN})."
+
+msgid "Local eStation URL"
+msgstr "URL eStation locale"
+
+msgid ""
+"If set, only eStation products available on this local instance will be "
+"imported"
+msgstr ""
+"Si renseigné, seuls les produits eStation disponibles sur cette instance "
+"locale seront importés"
+
+msgid "Country code (alpha-3)"
+msgstr "Code pays (alpha-3)"
+
+msgid ""
+"ISO 3166-1 alpha-3 country code used for URL placeholder substitution (e.g. "
+"bfa)"
+msgstr ""
+"Code pays ISO 3166-1 alpha-3 utilisé pour la substitution dans les URL (ex. "
+"bfa)"
+
+msgid "Country code (alpha-2)"
+msgstr "Code pays (alpha-2)"
+
+msgid ""
+"ISO 3166-1 alpha-2 country code used for URL placeholder substitution (e.g. "
+"bf)"
+msgstr ""
+"Code pays ISO 3166-1 alpha-2 utilisé pour la substitution dans les URL (ex. "
+"bf)"
+
+msgid "Country name"
+msgstr "Nom du pays"
+
+msgid "Official country name from OpenStreetMap Nominatim (display_name)"
+msgstr "Nom officiel du pays d’après OpenStreetMap Nominatim (display_name)"
+
+msgid "Country bounding box"
+msgstr "Bounding box du pays"
+
+msgid ""
+"Nominatim country bounding box as [south, north, west, east] of decimal "
+"degrees"
+msgstr ""
+"Bounding box du pays d’après Nominatim, sous la forme [sud, nord, ouest, "
+"est] en degrés décimaux"
+
+msgid "Plugin Settings"
+msgstr "Paramètres du plugin"
+
+msgid "Loaded catalog version"
+msgstr "Version du catalogue chargée"
+
+msgid "Loaded catalog schema version"
+msgstr "Version de schéma du catalogue chargée"
+
+msgid "Last load timestamp"
+msgstr "Date du dernier chargement"
+
+msgid "Catalog State"
+msgstr "État du catalogue"
+
+# ── CatalogEntry choices ─────────────────────────────────────────────────────
+
+msgid "WMS"
+msgstr "WMS"
+
+msgid "Raster Tile"
+msgstr "Tuile raster"
+
+msgid "Vector Tile"
+msgstr "Tuile vectorielle"
+
+msgid "Raster File"
+msgstr "Fichier raster"
+
+msgid "Vector File"
+msgstr "Fichier vectoriel"
+
+msgid "Raster COG"
+msgstr "Raster COG"
+
+msgid "From configuration"
+msgstr "Depuis la configuration"
+
+msgid "Manually added"
+msgstr "Ajouté manuellement"
+
+msgid "WMS import"
+msgstr "Import WMS"
+
+# ── CatalogEntry fields ──────────────────────────────────────────────────────
+
+msgid "Product code"
+msgstr "Code produit"
+
+msgid ""
+"Unique identifier. For config entries this comes from the CSV/JSON. For "
+"manual/WMS entries it is auto-generated."
+msgstr ""
+"Identifiant unique. Pour les entrées de configuration, il provient du "
+"CSV/JSON. Pour les entrées manuelles/WMS, il est généré automatiquement."
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Layer type"
+msgstr "Type de couche"
+
+msgid "Category"
+msgstr "Catégorie"
+
+msgid "Subcategory"
+msgstr "Sous-catégorie"
+
+msgid "WMS layer name"
+msgstr "Nom de la couche WMS"
+
+msgid "Layer identifier as returned by WMS GetCapabilities"
+msgstr "Identifiant de couche tel que renvoyé par WMS GetCapabilities"
+
+msgid "WMS base URL"
+msgstr "URL de base WMS"
+
+msgid "Public"
+msgstr "Public"
+
+#, python-brace-format
+msgid ""
+"Propagated to Dataset.public. False for ECMWF private layers "
+"(token={ECMWF_TOKEN} in config)."
+msgstr ""
+"Propagé vers Dataset.public. Faux pour les couches ECMWF privées "
+"(token={ECMWF_TOKEN} en config)."
+
+msgid "Extra WMS params"
+msgstr "Paramètres WMS supplémentaires"
+
+msgid "Additional query parameters for WMS requests (JSON object)"
+msgstr "Paramètres de requête supplémentaires pour les requêtes WMS (objet JSON)"
+
+msgid "Tile URL"
+msgstr "URL des tuiles"
+
+#, python-brace-format
+msgid ""
+"URL template with {z}/{x}/{y} placeholders, or a .pmtiles file URL when "
+"is_pmtiles is set"
+msgstr ""
+"Modèle d’URL avec les placeholders {z}/{x}/{y}, ou URL d’un fichier "
+".pmtiles si is_pmtiles est activé"
+
+msgid "PMTiles format"
+msgstr "Format PMTiles"
+
+msgid ""
+"For vector_tile layers: treat tile_url as a PMTiles archive URL instead of "
+"an XYZ template"
+msgstr ""
+"Pour les couches vector_tile : considérer tile_url comme une URL d’archive "
+"PMTiles plutôt qu’un modèle XYZ"
+
+msgid "File URL"
+msgstr "URL du fichier"
+
+#, python-brace-format
+msgid "URL to a remote file. May contain {country_alpha3} placeholder."
+msgstr ""
+"URL d’un fichier distant. Peut contenir le placeholder {country_alpha3}."
+
+msgid "File bearer token"
+msgstr "Bearer token pour le fichier"
+
+msgid ""
+"Optional bearer token sent as 'Authorization: Bearer …' when downloading "
+"file_url (e.g. APIs that require auth)."
+msgstr ""
+"Bearer token optionnel envoyé en « Authorization: Bearer … » lors du "
+"téléchargement de file_url (ex. APIs qui requièrent une authentification)."
+
+msgid "COG URL template"
+msgstr "Modèle d’URL COG"
+
+msgid ""
+"URL template with a time placeholder, e.g. https://example.org/data/"
+"file_{time:%Y}.tif"
+msgstr ""
+"Modèle d’URL avec un placeholder temporel, ex. https://example.org/data/"
+"file_{time:%Y}.tif"
+
+msgid "COG time start"
+msgstr "Début temporel COG"
+
+msgid "COG time end"
+msgstr "Fin temporelle COG"
+
+msgid "COG time step value"
+msgstr "Valeur du pas de temps COG"
+
+msgid "COG time step unit"
+msgstr "Unité du pas de temps COG"
+
+msgid "One of: years, months, days, hours"
+msgstr "L’une des valeurs : years, months, days, hours"
+
+msgid "COG datetime display format"
+msgstr "Format d’affichage de la date/heure COG"
+
+msgid "Raster style"
+msgstr "Style raster"
+
+msgid ""
+"Raster style definition: {min, max, steps, palette, interpolate, "
+"legend_type, unit}"
+msgstr ""
+"Définition de style raster : {min, max, steps, palette, interpolate, "
+"legend_type, unit}"
+
+msgid "Render layers"
+msgstr "Couches de rendu"
+
+msgid "MapLibre GL style layer definitions (JSON array)"
+msgstr "Définitions de style MapLibre GL des couches (tableau JSON)"
+
+msgid "Popup config"
+msgstr "Configuration de la popup"
+
+msgid ""
+"List of fields shown when a feature is clicked. Each item: {data_key, label, "
+"data_type}."
+msgstr ""
+"Liste des champs affichés au clic sur un objet. Chaque élément : "
+"{data_key, label, data_type}."
+
+msgid "Enable popup"
+msgstr "Activer la popup"
+
+msgid "If checked, a popup will be displayed when clicking on the layer."
+msgstr "Si coché, une popup s’affichera au clic sur la couche."
+
+msgid "Load legend from WMS capabilities"
+msgstr "Charger la légende depuis les capabilities WMS"
+
+msgid ""
+"If checked, the legend will be loaded from the WMS GetCapabilities response "
+"(LegendURL)."
+msgstr ""
+"Si coché, la légende sera chargée depuis la réponse WMS GetCapabilities "
+"(LegendURL)."
+
+msgid "Legend"
+msgstr "Légende"
+
+msgid "Custom legend definition: {type, items: [{name, color}]}"
+msgstr "Définition de légende personnalisée : {type, items: [{name, color}]}"
+
+msgid "Initially visible on map"
+msgstr "Visible sur la carte par défaut"
+
+msgid "If set, the dataset is enabled on the map by default."
+msgstr "Si activé, le dataset est affiché sur la carte par défaut."
+
+msgid "Auto update interval (minutes)"
+msgstr "Intervalle de mise à jour auto (minutes)"
+
+msgid ""
+"Auto-refresh interval for multi-temporal layers, in minutes. Leave empty to "
+"disable auto-updating."
+msgstr ""
+"Intervalle de rafraîchissement automatique pour les couches multi-"
+"temporelles, en minutes. Laisser vide pour désactiver."
+
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Whether this entry should be provisioned in Climweb"
+msgstr "Indique si cette entrée doit être provisionnée dans Climweb"
+
+msgid "Climweb Dataset ID"
+msgstr "ID du Dataset Climweb"
+
+msgid "UUID of the corresponding Dataset in geomanager, if provisioned"
+msgstr "UUID du Dataset correspondant dans geomanager, si provisionné"
+
+msgid "Catalog content hash"
+msgstr "Hash du contenu du catalogue"
+
+msgid ""
+"sha256 of catalog-derived fields at last load. Used to detect whether a re-"
+"load actually changes anything for this entry."
+msgstr ""
+"sha256 des champs issus du catalogue au dernier chargement. Permet de "
+"détecter si un re-chargement modifie réellement cette entrée."
+
+msgid "Provisioned content hash"
+msgstr "Hash du contenu provisionné"
+
+msgid ""
+"sha256 of the Climweb Dataset (+ related objects) the last time this entry "
+"was provisioned or re-provisioned. Used to detect Wagtail admin edits that "
+"diverge from the catalog."
+msgstr ""
+"sha256 du Dataset Climweb (+ objets liés) lors du dernier provisionnement "
+"ou re-provisionnement de cette entrée. Permet de détecter les éditions "
+"Wagtail qui s’écartent du catalogue."
+
+msgid "Source hash at last sync"
+msgstr "Hash source à la dernière synchronisation"
+
+msgid ""
+"Value of source_hash at the moment of the last successful sync. Used to "
+"detect whether the catalog content has moved since the Climweb Dataset was "
+"provisioned."
+msgstr ""
+"Valeur de source_hash au moment de la dernière synchronisation réussie. "
+"Permet de détecter si le contenu du catalogue a changé depuis le "
+"provisionnement du Dataset Climweb."
+
+msgid "Category sort order"
+msgstr "Ordre de tri des catégories"
+
+msgid "Subcategory sort order"
+msgstr "Ordre de tri des sous-catégories"
+
+msgid "Entry sort order"
+msgstr "Ordre de tri des entrées"
+
+msgid "Catalog Entry"
+msgstr "Entrée de catalogue"
+
+msgid "Catalog Entries"
+msgstr "Entrées de catalogue"
+
+# ── Template (HTML) ──────────────────────────────────────────────────────────
+
+msgid "Dataset Helper"
+msgstr "Dataset Helper"
+
+msgid "Dataset helper"
+msgstr "Dataset Helper"
+
+msgid "Layer Catalog"
+msgstr "Catalogue de couches"
+
+msgid "Danger Zone"
+msgstr "Zone dangereuse"
+
+msgid "Total Layers"
+msgstr "Couches au total"
+
+msgid "Synced"
+msgstr "Synchronisées"
+
+msgid "Review changes"
+msgstr "Revoir les changements"
+
+msgid "Settings"
+msgstr "Paramètres"
+
+msgid "required setting missing"
+msgstr "paramètre obligatoire manquant"
+
+msgid "ECMWF Token"
+msgstr "Token ECMWF"
+
+msgid "(leave empty for public-only)"
+msgstr "(laisser vide pour les couches publiques uniquement)"
+
+#, python-brace-format
+msgid ""
+"Token for eccharts.ecmwf.int. Empty = public layers only; private layers "
+"(token={ECMWF_TOKEN}) are skipped."
+msgstr ""
+"Token pour eccharts.ecmwf.int. Vide = couches publiques uniquement ; les "
+"couches privées (token={ECMWF_TOKEN}) sont ignorées."
+
+msgid "Leave empty to import all eStation products"
+msgstr "Laisser vide pour importer tous les produits eStation"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Loading countries…"
+msgstr "Chargement des pays…"
+
+#, python-brace-format
+msgid ""
+"Required. Saves ISO codes (placeholders <code>{country_alpha3}</code> / "
+"<code>{country_alpha2}</code>), the official country name and the bounding "
+"box from OpenStreetMap Nominatim."
+msgstr ""
+"Obligatoire. Enregistre les codes ISO (placeholders <code>{country_alpha3}</"
+"code> / <code>{country_alpha2}</code>), le nom officiel du pays et la "
+"bounding box depuis OpenStreetMap Nominatim."
+
+msgid "Save Settings"
+msgstr "Enregistrer les paramètres"
+
+msgid "How to use this page"
+msgstr "Comment utiliser cette page"
+
+msgid ""
+"This page manages the WMS layers available for your Climweb map viewer.\n"
+"                The tree below shows all layers grouped by <strong>Category</"
+"strong> and <strong>Subcategory</strong>."
+msgstr ""
+"Cette page gère les couches WMS disponibles dans le mapviewer Climweb.\n"
+"                L’arborescence ci-dessous présente toutes les couches "
+"regroupées par <strong>Catégorie</strong> et <strong>Sous-catégorie</strong>."
+
+msgid ""
+"Use the <strong>checkboxes</strong> to enable or disable individual layers."
+msgstr ""
+"Utilisez les <strong>cases à cocher</strong> pour activer ou désactiver "
+"individuellement les couches."
+
+msgid "Status indicators:"
+msgstr "Indicateurs de statut :"
+
+msgid "synced (already in Climweb)"
+msgstr "synchronisé (déjà dans Climweb)"
+
+msgid "will be added on next load"
+msgstr "sera ajouté au prochain chargement"
+
+msgid "will be removed on next load"
+msgstr "sera supprimé au prochain chargement"
+
+msgid "inactive"
+msgstr "inactif"
+
+msgid ""
+"Click <strong>Synchronize with Climweb</strong> to apply your selection — "
+"enabled layers are created in the database, disabled ones are removed."
+msgstr ""
+"Cliquez sur <strong>Synchroniser avec Climweb</strong> pour appliquer votre "
+"sélection — les couches activées sont créées en base, les couches "
+"désactivées sont supprimées."
+
+msgid ""
+"You can extend the catalog by adding layers manually, importing from a "
+"remote WMS service, or loading a JSON configuration."
+msgstr ""
+"Vous pouvez étendre le catalogue en ajoutant des couches manuellement, en "
+"important depuis un service WMS distant, ou en chargeant une configuration "
+"JSON."
+
+msgid "Synchronize with Climweb"
+msgstr "Synchroniser avec Climweb"
+
+msgid "Add Layer"
+msgstr "Ajouter une couche"
+
+msgid "Import from WMS"
+msgstr "Importer depuis un WMS"
+
+msgid "Load Config JSON"
+msgstr "Charger une config JSON"
+
+msgid "Reset Catalog"
+msgstr "Réinitialiser le catalogue"
+
+msgid "Add a Layer"
+msgstr "Ajouter une couche"
+
+msgid "e.g. Rainfall"
+msgstr "ex. Précipitations"
+
+msgid "e.g. Observation"
+msgstr "ex. Observation"
+
+msgid "Dataset title"
+msgstr "Titre du dataset"
+
+msgid "WMS Layer Name"
+msgstr "Nom de la couche WMS"
+
+msgid "WMS LAYERS parameter"
+msgstr "Paramètre WMS LAYERS"
+
+msgid "WMS Base URL"
+msgstr "URL de base WMS"
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Data provider"
+msgstr "Fournisseur de données"
+
+msgid "Resolution"
+msgstr "Résolution"
+
+msgid "e.g. 1km"
+msgstr "ex. 1 km"
+
+msgid "Add"
+msgstr "Ajouter"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "WMS Service URL"
+msgstr "URL du service WMS"
+
+msgid "GetCapabilities will be called automatically"
+msgstr "GetCapabilities sera appelé automatiquement"
+
+msgid "Fetch Layers"
+msgstr "Récupérer les couches"
+
+msgid "Change URL"
+msgstr "Changer l’URL"
+
+msgid "Search by layer name, title, or abstract..."
+msgstr "Rechercher par nom, titre ou résumé de couche…"
+
+msgid "Configure selected layer"
+msgstr "Configurer la couche sélectionnée"
+
+msgid "Layer Name"
+msgstr "Nom de la couche"
+
+msgid "e.g. Environment"
+msgstr "ex. Environnement"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Add to Catalog"
+msgstr "Ajouter au catalogue"
+
+msgid "Back to list"
+msgstr "Retour à la liste"
+
+msgid "Load JSON Config into Catalog"
+msgstr "Charger une config JSON dans le catalogue"
+
+msgid "Review embedded catalog"
+msgstr "Revoir le catalogue embarqué"
+
+msgid ""
+"Paste a bulk config JSON. This loads entries into the catalog (does NOT "
+"create Climweb objects yet)."
+msgstr ""
+"Collez un JSON de configuration en masse. Les entrées sont chargées dans le "
+"catalogue (les objets Climweb ne sont PAS encore créés)."
+
+msgid "Paste JSON config here..."
+msgstr "Collez la config JSON ici…"
+
+msgid "Load into Catalog"
+msgstr "Charger dans le catalogue"
+
+msgid "Expand all"
+msgstr "Tout déplier"
+
+msgid "Collapse all"
+msgstr "Tout replier"
+
+msgid "Clear catalog-managed datasets"
+msgstr "Supprimer les datasets gérés par le catalogue"
+
+msgid ""
+"Delete every Climweb Dataset this plugin provisioned (tracked via\n"
+"                <code>CatalogEntry.dataset_id</code>) and its dedicated "
+"Metadata,\n"
+"                then sweep any SubCategories and Categories that no longer "
+"hold\n"
+"                anything. <strong>Datasets you created outside the plugin "
+"are kept</strong>;\n"
+"                so are taxonomy nodes still pointed to by non-plugin "
+"Datasets.\n"
+"                Catalog entries go back to <em>pending_add</em> and can be\n"
+"                re-provisioned by clicking <em>Synchronize with Climweb</em>."
+msgstr ""
+"Supprime tous les Datasets Climweb provisionnés par ce plugin (suivis via\n"
+"                <code>CatalogEntry.dataset_id</code>) et leurs métadonnées "
+"dédiées,\n"
+"                puis nettoie les sous-catégories et catégories devenues "
+"vides.\n"
+"                <strong>Les Datasets créés en dehors du plugin sont "
+"conservés</strong> ;\n"
+"                de même que les nœuds de taxonomie encore référencés par "
+"des Datasets hors plugin.\n"
+"                Les entrées du catalogue repassent en <em>pending_add</em> "
+"et peuvent être\n"
+"                re-provisionnées en cliquant sur <em>Synchroniser avec "
+"Climweb</em>."
+
+msgid "Wipe ALL Climweb data (nuclear)"
+msgstr "Supprimer TOUTES les données Climweb (option nucléaire)"
+
+msgid ""
+"This deletes <strong>every</strong> Dataset, SubCategory, and Category\n"
+"                in the Climweb geomanager — including any not created by "
+"this plugin.\n"
+"                Use only if you understand what this implies. Cannot be "
+"undone."
+msgstr ""
+"Cela supprime <strong>tous</strong> les Datasets, sous-catégories et "
+"catégories\n"
+"                du geomanager Climweb — y compris ceux qui n’ont pas été "
+"créés par ce plugin.\n"
+"                À utiliser uniquement si vous comprenez ce que cela "
+"implique. Action irréversible."
+
+msgid "Clear All Datasets & Categories"
+msgstr "Supprimer tous les Datasets & Catégories"
+
+# ── views.py messages ────────────────────────────────────────────────────────
+
+#, python-format
+msgid "Server error: %(error)s"
+msgstr "Erreur serveur : %(error)s"
+
+#, python-format
+msgid "Invalid JSON: %(error)s"
+msgstr "JSON invalide : %(error)s"
+
+msgid "Expected a JSON object"
+msgstr "Objet JSON attendu"
+
+#, python-format
+msgid ""
+"Catalog loaded: %(created)d created, %(updated)d updated, %(unchanged)d "
+"unchanged"
+msgstr ""
+"Catalogue chargé : %(created)d créés, %(updated)d mis à jour, "
+"%(unchanged)d inchangés"
+
+#, python-format
+msgid ", %(count)d skipped (not on local eStation)"
+msgstr ", %(count)d ignorés (absents de l’eStation locale)"
+
+#, python-format
+msgid "Invalid embedded catalog JSON: %(error)s"
+msgstr "JSON du catalogue embarqué invalide : %(error)s"
+
+#, python-format
+msgid "conflict_policy must be 'skip' or 'overwrite', got %(policy)r"
+msgstr "conflict_policy doit valoir « skip » ou « overwrite », reçu %(policy)r"
+
+#, python-format
+msgid ", %(count)d conflicts kept local"
+msgstr ", %(count)d conflits conservés en local"
+
+#, python-format
+msgid ", %(count)d disabled (gone from JSON)"
+msgstr ", %(count)d désactivés (absents du JSON)"
+
+#, python-format
+msgid "%(count)d added"
+msgstr "%(count)d ajoutés"
+
+#, python-format
+msgid "%(count)d removed"
+msgstr "%(count)d supprimés"
+
+#, python-format
+msgid "%(count)d updated"
+msgstr "%(count)d mis à jour"
+
+#, python-format
+msgid "%(count)d orphans cleared"
+msgstr "%(count)d orphelins nettoyés"
+
+#, python-format
+msgid "%(count)d raster_file drift (skipped)"
+msgstr "%(count)d raster_file divergents (ignorés)"
+
+#, python-format
+msgid "Sync complete: %(parts)s"
+msgstr "Synchronisation terminée : %(parts)s"
+
+#, python-format
+msgid "Sync failed: %(error)s"
+msgstr "Échec de la synchronisation : %(error)s"
+
+msgid "Entry not found"
+msgstr "Entrée introuvable"
+
+msgid "No entry_ids provided"
+msgstr "Aucun entry_ids fourni"
+
+#, python-format
+msgid ""
+"Catalog reset: %(entries)d catalog entries deleted, %(datasets)d Climweb "
+"Dataset(s) removed, %(metadata)d Metadata removed, %(subcats)d empty "
+"SubCategor(ies) swept, %(cats)d empty Categor(ies) swept"
+msgstr ""
+"Catalogue réinitialisé : %(entries)d entrées supprimées, %(datasets)d "
+"Dataset(s) Climweb supprimés, %(metadata)d métadonnées supprimées, "
+"%(subcats)d sous-catégorie(s) vide(s) nettoyée(s), %(cats)d catégorie(s) "
+"vide(s) nettoyée(s)"
+
+#, python-format
+msgid "Reset failed: %(error)s"
+msgstr "Échec de la réinitialisation : %(error)s"
+
+#, python-format
+msgid "Missing required fields: %(fields)s"
+msgstr "Champs obligatoires manquants : %(fields)s"
+
+#, python-format
+msgid "Entry '%(title)s' added"
+msgstr "Entrée « %(title)s » ajoutée"
+
+msgid "Missing wms_url"
+msgstr "wms_url manquant"
+
+msgid "owslib is not installed. Cannot read WMS capabilities."
+msgstr "owslib n’est pas installé. Impossible de lire les capabilities WMS."
+
+#, python-format
+msgid "Failed to read WMS capabilities: %(error)s"
+msgstr "Échec de la lecture des capabilities WMS : %(error)s"
+
+#, python-format
+msgid "Invalid language: %(lang)s"
+msgstr "Langue invalide : %(lang)s"
+
+msgid "country_alpha3 is required (ISO 3166-1 alpha-3)"
+msgstr "country_alpha3 est obligatoire (ISO 3166-1 alpha-3)"
+
+msgid "country_alpha2 is required (ISO 3166-1 alpha-2)"
+msgstr "country_alpha2 est obligatoire (ISO 3166-1 alpha-2)"
+
+msgid "country_name is required"
+msgstr "country_name est obligatoire"
+
+msgid "country_bbox must be a list of 4 numbers [south, north, west, east]"
+msgstr "country_bbox doit être une liste de 4 nombres [sud, nord, ouest, est]"
+
+msgid "Settings saved"
+msgstr "Paramètres enregistrés"
+
+#, python-format
+msgid "Clear failed: %(error)s"
+msgstr "Échec de la suppression : %(error)s"
+
+#, python-format
+msgid ""
+"Cleared catalog-managed data: %(datasets)d Dataset(s), %(metadata)d "
+"Metadata, %(subcats)d empty SubCategor(ies), %(cats)d empty Categor(ies). "
+"%(entries)d catalog entries reset to pending_add."
+msgstr ""
+"Données gérées par le catalogue supprimées : %(datasets)d Dataset(s), "
+"%(metadata)d métadonnée(s), %(subcats)d sous-catégorie(s) vide(s), "
+"%(cats)d catégorie(s) vide(s). %(entries)d entrées du catalogue remises en "
+"pending_add."
+
+#, python-format
+msgid "Completed with %(count)d error(s)"
+msgstr "Terminé avec %(count)d erreur(s)"
+
+msgid "All data cleared successfully"
+msgstr "Toutes les données ont été supprimées avec succès"
+
+# ── Template (Admin Boundaries) ──────────────────────────────────────────────
+
+msgid "Admin Boundaries"
+msgstr "Limites administratives"
+
+msgid "Bootstrap the Climweb <strong>administrative boundaries</strong> layer from the OCHA Common Operational Datasets (COD-AB) published on HDX. The shapefile archive for the configured country is downloaded, its columns are normalized per admin level, and every level is loaded into the boundary manager (served as vector tiles)."
+msgstr "Initialise la couche des <strong>limites administratives</strong> de Climweb à partir des Common Operational Datasets de l’OCHA (COD-AB) publiés sur HDX. L’archive shapefile du pays configuré est téléchargée, ses colonnes sont normalisées par niveau administratif, et chaque niveau est chargé dans le boundary manager (servi en tuiles vectorielles)."
+
+msgid "Features loaded"
+msgstr "Entités chargées"
+
+msgid "not configured"
+msgstr "non configuré"
+
+msgid "How it works"
+msgstr "Comment ça marche"
+
+msgid "The country comes from the <strong>plugin settings</strong> (ISO codes). Set it on the <em>Settings</em> tab first."
+msgstr "Le pays provient des <strong>paramètres du plugin</strong> (codes ISO). Renseignez-le d’abord dans l’onglet <em>Paramètres</em>."
+
+msgid "The COD-AB shapefile ZIP is located on HDX automatically (<code>cod-ab-&lt;iso3&gt;</code>) and downloaded."
+msgstr "L’archive ZIP shapefile COD-AB est localisée automatiquement sur HDX (<code>cod-ab-&lt;iso3&gt;</code>) puis téléchargée."
+
+msgid "Each admin level (adm0, adm1, …) is extracted, its columns are normalized, re-zipped and loaded."
+msgstr "Chaque niveau administratif (adm0, adm1, …) est extrait, ses colonnes sont normalisées, re-zippé puis chargé."
+
+msgid "Re-running the import replaces the previously loaded levels for this country (idempotent)."
+msgstr "Relancer l’import remplace les niveaux précédemment chargés pour ce pays (idempotent)."
+
+msgid "Import boundaries from OCHA"
+msgstr "Importer les limites depuis OCHA"
+
+msgid "Clear boundaries"
+msgstr "Supprimer les limites"
+
+msgid "Loaded admin levels"
+msgstr "Niveaux administratifs chargés"
+
+msgid "Loading…"
+msgstr "Chargement…"
+
+msgid "Map preview"
+msgstr "Aperçu cartographique"
+
+msgid "Vector tiles served by the boundary manager."
+msgstr "Tuiles vectorielles servies par le boundary manager."
+
+# ── views.py messages (Admin Boundaries) ─────────────────────────────────────
+
+#, python-format
+msgid "Import failed: %(error)s"
+msgstr "Échec de l’import : %(error)s"
+
+#, python-format
+msgid "Boundaries imported: %(ok)d level(s), %(features)d features"
+msgstr "Limites importées : %(ok)d niveau(x), %(features)d entités"
+
+#, python-format
+msgid ", %(failed)d level(s) failed"
+msgstr ", %(failed)d niveau(x) en échec"
+
+#, python-format
+msgid "%(count)d boundary feature(s) deleted"
+msgstr "%(count)d entité(s) de limites supprimée(s)"
+
+# ── Settings tab (separate tab, gating, next steps) ──
+
+msgid "Complete the required settings first"
+msgstr "Complétez d’abord les réglages obligatoires"
+
+msgid "Configure the plugin for this Climweb instance. The Country is required — the Catalog and Boundaries tabs stay locked until it is set."
+msgstr "Configurez le plugin pour cette instance Climweb. Le pays est obligatoire — les onglets Catalogue et Limites restent verrouillés tant qu’il n’est pas défini."
+
+msgid "Complete the required settings below to unlock the other tabs."
+msgstr "Complétez les réglages obligatoires ci-dessous pour déverrouiller les autres onglets."
+
+msgid "Settings saved. What would you like to configure next?"
+msgstr "Réglages enregistrés. Que souhaitez-vous configurer ensuite ?"
+
+msgid "Configure the catalog"
+msgstr "Configurer le catalogue"
+
+msgid "Configure the boundaries"
+msgstr "Configurer les limites"
+
+msgid "Load, review and synchronize the layer catalog with Climweb."
+msgstr "Chargez, vérifiez et synchronisez le catalogue de couches avec Climweb."
+
+msgid "Import the administrative boundaries for your country."
+msgstr "Importez les limites administratives de votre pays."
+
+# ── Added: catalog/settings/boundaries redesign ──
+
+msgid "A new catalog version is available"
+msgstr "Une nouvelle version du catalogue est disponible"
+
+msgid "Catalog"
+msgstr "Catalogue"
+
+msgid "Catalog layers"
+msgstr "Couches du catalogue"
+
+msgid "Compare the changeset and import the new version."
+msgstr "Comparez les changements et importez la nouvelle version."
+
+msgid "Dismiss"
+msgstr "Fermer"
+
+msgid "Import language"
+msgstr "Langue d'import"
+
+msgid "Later"
+msgstr "Plus tard"
+
+msgid "Layer catalog for the Climweb map viewer"
+msgstr "Catalogue de couches du mapviewer Climweb"
+
+msgid "Load catalog"
+msgstr "Charger le catalogue"
+
+msgid "No catalog loaded yet"
+msgstr "Aucun catalogue n'est chargé"
+
+msgid "Plugin Documentation"
+msgstr "Documentation du plugin"
+
+msgid "The local catalog is empty. Load the embedded catalog to populate it, then synchronize with Climweb."
+msgstr "Le catalogue local est vide. Chargez le catalogue embarqué pour le remplir, puis synchronisez avec Climweb."
+
+# ── Added: layer tree controls/detail ──
+
+msgid "All"
+msgstr "Toutes"
+
+msgid "Disabled"
+msgstr "Désactivées"
+
+msgid "Search a layer, a provider…"
+msgstr "Rechercher une couche, un fournisseur…"
+
+msgid "To add"
+msgstr "À ajouter"
+
+msgid "To remove"
+msgstr "À retirer"
+
+# ── Added: tree select-all/deselect-all ──
+
+msgid "Select all layers"
+msgstr "Tout sélectionner"
+
+msgid "Deselect all layers"
+msgstr "Tout désélectionner"
+
+# ── Added: clear search ──
+
+msgid "Clear search"
+msgstr "Effacer la recherche"

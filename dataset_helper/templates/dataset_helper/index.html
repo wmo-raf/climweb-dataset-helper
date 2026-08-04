@@ -1,0 +1,2311 @@
+{% extends "wagtailadmin/base.html" %}
+{% load static i18n %}
+{% block titletag %}{% trans "Dataset Helper" %}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+
+<style>
+    .tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab-button {
+        padding: 12px 24px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+
+    .tab-button:hover {
+        color: #374151;
+        background: #f9fafb;
+    }
+
+    .tab-button.active {
+        color: #059669;
+        border-bottom-color: #059669;
+    }
+
+    /* Locked tabs: inaccessible until the mandatory settings are saved. */
+    .tab-button.locked {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .tab-button.locked:hover {
+        color: #9ca3af;
+        background: transparent;
+    }
+
+    .tab-content {
+        display: none;
+        padding: 20px 0;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .import-button {
+        padding: 10px 24px;
+        background: #059669;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .import-button:hover {
+        background: #047857;
+    }
+
+    .import-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .danger-button {
+        padding: 10px 24px;
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .danger-button:hover {
+        background: #b91c1c;
+    }
+
+    .danger-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .danger-zone {
+        margin-top: 40px;
+        padding: 20px;
+        border: 2px solid #fca5a5;
+        border-radius: 8px;
+        background: #fef2f2;
+    }
+
+    .danger-zone h3 {
+        color: #991b1b;
+        margin-top: 0;
+    }
+
+    .results-panel {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 6px;
+        display: none;
+    }
+
+    .results-panel.visible {
+        display: block;
+    }
+
+    .results-panel.success {
+        background: #d1fae5;
+        border: 1px solid #6ee7b7;
+    }
+
+    .results-panel.error {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+    }
+
+    .results-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .result-stat {
+        background: white;
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .result-stat .number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #059669;
+    }
+
+    .result-stat .label {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ffffff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Catalog tree styles */
+    .catalog-toolbar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .catalog-tree {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .cat-group {
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .cat-group:last-child {
+        border-bottom: none;
+    }
+
+    .cat-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #f3f4f6;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        user-select: none;
+    }
+    .cat-header:hover {
+        background: #e5e7eb;
+    }
+    .cat-header .arrow {
+        transition: transform 0.2s;
+        font-size: 10px;
+        color: #6b7280;
+    }
+    .cat-header .arrow.open {
+        transform: rotate(90deg);
+    }
+    .cat-header .cat-count {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: normal;
+        color: #6b7280;
+    }
+
+    .subcat-group {
+        border-top: 1px solid #f3f4f6;
+    }
+    .subcat-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px 10px 32px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        color: #374151;
+        user-select: none;
+    }
+    .subcat-header:hover {
+        background: #fafafa;
+    }
+    .subcat-header .subcat-count {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: normal;
+        color: #9ca3af;
+    }
+
+    .entry-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px 8px 56px;
+        font-size: 13px;
+        border-top: 1px solid #f9fafb;
+    }
+    .entry-row:hover {
+        background: #fafafa;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .status-dot.synced { background: #10b981; }
+    .status-dot.pending_add { background: #f59e0b; }
+    .status-dot.pending_remove { background: #ef4444; }
+    .status-dot.disabled { background: #d1d5db; }
+
+    .entry-title {
+        flex: 1;
+        min-width: 0;
+    }
+    .entry-title .title-text {
+        font-weight: 500;
+    }
+    .entry-title .meta-text {
+        font-size: 11px;
+        color: #9ca3af;
+    }
+
+    .entry-type-badge {
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 3px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        flex-shrink: 0;
+        margin-right: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .entry-origin {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: #f3f4f6;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+
+    /* Layer detail panel */
+    .entry-detail {
+        display: none;
+        padding: 16px 16px 16px 56px;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        animation: slideDown 0.2s ease-out;
+    }
+    .entry-detail.open {
+        display: block;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; max-height: 0; }
+        to { opacity: 1; max-height: 600px; }
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 16px;
+    }
+    .detail-meta table {
+        width: 100%;
+        font-size: 12px;
+        border-collapse: collapse;
+    }
+    .detail-meta td {
+        padding: 4px 8px 4px 0;
+        vertical-align: top;
+    }
+    .detail-meta td:first-child {
+        font-weight: 600;
+        color: #6b7280;
+        white-space: nowrap;
+        width: 140px;
+    }
+    .detail-meta td:last-child {
+        color: #374151;
+        word-break: break-word;
+    }
+    .detail-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    .detail-preview img {
+        max-width: 256px;
+        max-height: 200px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: #e5e7eb;
+    }
+    .detail-preview .preview-label {
+        font-size: 11px;
+        color: #9ca3af;
+    }
+    .detail-description {
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: #4b5563;
+        line-height: 1.5;
+    }
+
+    .catalog-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+    .catalog-empty h3 {
+        margin-bottom: 8px;
+        color: #374151;
+    }
+
+    .catalog-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .collapsible-content {
+        display: none;
+    }
+    .collapsible-content.open {
+        display: block;
+    }
+
+    /* Catalog preview pane (review changes before apply) */
+    .catalog-preview-pane {
+        margin-bottom: 16px;
+        padding: 16px 18px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+        display: none;
+    }
+    .catalog-preview-pane.visible { display: block; }
+    .catalog-preview-pane h3 {
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        color: #111827;
+    }
+    .catalog-preview-pane .preview-sub {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 14px;
+    }
+    .catalog-preview-pane .preview-counts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+    .catalog-preview-pane .preview-counts .pc {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .catalog-preview-pane .preview-counts .pc strong { font-weight: 600; }
+    .catalog-preview-pane .preview-counts .pc-dot {
+        width: 9px; height: 9px; border-radius: 50%;
+        display: inline-block;
+    }
+    .pc-dot.add        { background: #059669; }
+    .pc-dot.update     { background: #2563eb; }
+    .pc-dot.drift      { background: #9333ea; }
+    .pc-dot.conflict   { background: #dc2626; }
+    .pc-dot.remove     { background: #6b7280; }
+    .pc-dot.unchanged  { background: #d1d5db; }
+
+    .catalog-preview-pane .bucket {
+        border-top: 1px solid #f3f4f6;
+        padding: 8px 0;
+    }
+    .catalog-preview-pane .bucket summary {
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        padding: 4px 0;
+        list-style: revert;
+    }
+    .catalog-preview-pane .bucket.conflict summary {
+        color: #b91c1c;
+    }
+    .catalog-preview-pane .bucket ul {
+        margin: 6px 0 4px 18px;
+        padding: 0;
+        list-style: disc;
+        font-size: 12px;
+        color: #4b5563;
+        max-height: 260px;
+        overflow-y: auto;
+    }
+    .catalog-preview-pane .bucket li {
+        padding: 2px 0;
+    }
+    .catalog-preview-pane .bucket li .path {
+        color: #9ca3af;
+        font-size: 11px;
+    }
+    .catalog-preview-pane .preview-actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .catalog-preview-pane .preview-actions button {
+        padding: 7px 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .catalog-preview-pane .btn-apply       { background: #059669; color: #fff; }
+    .catalog-preview-pane .btn-apply:hover { background: #047857; }
+    .catalog-preview-pane .btn-overwrite       { background: #dc2626; color: #fff; }
+    .catalog-preview-pane .btn-overwrite:hover { background: #b91c1c; }
+    .catalog-preview-pane .btn-cancel       { background: #e5e7eb; color: #374151; }
+    .catalog-preview-pane .btn-cancel:hover { background: #d1d5db; }
+    /* ============================================================
+       Redesigned upper section (Claude Design handoff) — scoped tokens
+       ============================================================ */
+    .nice-padding {
+      --dh-accent: #00a16c; --dh-accent-ink: #007a52; --dh-accent-soft: #e4f4ee; --dh-accent-softer: #f1faf6;
+      --dh-ink: #1b1b1f; --dh-ink-2: #44464b; --dh-ink-3: #6b6e76; --dh-ink-4: #9a9da6;
+      --dh-line: #e7e8ec; --dh-line-2: #eef0f3; --dh-surface: #fff; --dh-surface-2: #f7f8fa; --dh-surface-3: #f1f3f6;
+      --dh-st-synced: #00a16c; --dh-st-add: #e8830c; --dh-st-add-bg: #fdf0df; --dh-st-remove: #e0392b; --dh-st-disabled: #aeb2bb;
+      --dh-bk-new: #00a16c; --dh-bk-updated: #2563d8; --dh-bk-conflict: #d4520f; --dh-bk-remove: #e0392b;
+      --dh-r-sm: 6px; --dh-r-md: 9px; --dh-r-lg: 14px;
+      --dh-shadow-1: 0 1px 2px rgba(20,22,30,.05), 0 1px 3px rgba(20,22,30,.04);
+      --dh-sans: "Mulish", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .dh-update, .dh-overview, .dh-toprow, .dh-btn { font-family: var(--dh-sans); }
+    .dh-tab-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 7px; font-size: 11px; font-weight: 800; border-radius: 9px; background: var(--dh-st-add-bg); color: var(--dh-st-add); vertical-align: middle; font-family: var(--dh-sans); }
+
+    /* empty state: no catalog loaded yet (warning block) */
+    .dh-empty-warn { display: none; align-items: center; gap: 16px; padding: 20px 22px; margin-bottom: 18px; font-family: var(--dh-sans); background: #fef3c7; border: 1px solid #fcd34d; border-left: 4px solid var(--dh-st-add); border-radius: var(--dh-r-lg); }
+    .dh-empty-ic { width: 44px; height: 44px; border-radius: 12px; background: var(--dh-st-add); color: #fff; display: grid; place-items: center; flex: 0 0 auto; }
+    .dh-empty-body { flex: 1; min-width: 0; }
+    .dh-empty-title { font-size: 15.5px; font-weight: 800; color: #78350f; }
+    .dh-empty-text { font-size: 13px; color: #8a5a12; margin-top: 3px; line-height: 1.45; }
+    .dh-empty-warn .dh-btn { flex: 0 0 auto; }
+
+    /* top row: crumb + version chip + doc link */
+    .dh-toprow { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; flex-wrap: wrap; }
+    .dh-toprow .dh-crumb { font-size: 13px; color: var(--dh-ink-3); font-weight: 600; }
+    .dh-toprow-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .dh-vchip { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: var(--dh-ink-2); background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: 999px; padding: 6px 12px; }
+    .dh-vchip b { color: var(--dh-ink); }
+    .dh-vchip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dh-accent); }
+    .dh-doclink { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--dh-accent-ink); text-decoration: none; padding: 6px 4px; }
+    .dh-doclink:hover { text-decoration: underline; }
+
+    /* buttons */
+    .dh-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--dh-r-md); font-weight: 700; border: 1px solid transparent; transition: .14s; white-space: nowrap; line-height: 1; }
+    .dh-btn-md { padding: 10px 15px; font-size: 13.5px; }
+    .dh-btn-sm { padding: 7px 11px; font-size: 12.5px; }
+    .dh-btn-full { width: 100%; }
+    .dh-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .dh-btn-primary { background: var(--dh-accent); color: #fff; box-shadow: 0 2px 8px rgba(0,161,108,.28); }
+    .dh-btn-primary:hover:not(:disabled) { background: #00925f; }
+    .dh-btn-outline { background: var(--dh-surface); color: var(--dh-ink-2); border-color: var(--dh-line); }
+    .dh-btn-outline:hover:not(:disabled) { border-color: #cdd0d7; background: var(--dh-surface-2); color: var(--dh-ink); }
+    .dh-btn-ghost { background: transparent; color: var(--dh-ink-2); }
+    .dh-btn-ghost:hover:not(:disabled) { background: var(--dh-surface-3); color: var(--dh-ink); }
+    .dh-btn-badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; font-size: 11px; font-weight: 800; background: rgba(255,255,255,.26); }
+    .dh-btn-outline .dh-btn-badge { background: var(--dh-st-add-bg); color: var(--dh-st-add); }
+
+    /* update banner */
+    .dh-update { display: none; align-items: center; gap: 16px; padding: 16px 18px; margin-bottom: 18px;
+      background: linear-gradient(100deg, var(--dh-accent-softer), #fff 70%); border: 1px solid #bfe6d6; border-left: 4px solid var(--dh-accent); border-radius: var(--dh-r-lg); box-shadow: var(--dh-shadow-1); }
+    .dh-update.visible { display: flex; }
+    .dh-update-ic { width: 40px; height: 40px; border-radius: 11px; background: var(--dh-accent); color: #fff; display: grid; place-items: center; flex: 0 0 auto; box-shadow: 0 3px 10px rgba(0,161,108,.32); }
+    .dh-update-body { flex: 1; min-width: 0; }
+    .dh-update-title { font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--dh-ink); }
+    .dh-update-title b { color: var(--dh-accent-ink); }
+    .dh-update-sub { font-size: 13px; color: var(--dh-ink-2); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+    .dh-update-sub .s { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; }
+    .dh-update-sub .s svg { width: 13px; height: 13px; }
+    .dh-update-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+    /* overview card */
+    .dh-card { background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: var(--dh-r-lg); box-shadow: var(--dh-shadow-1); }
+    .dh-overview { display: block; margin-bottom: 18px; overflow: hidden; }
+    .dh-ov-left { padding: 20px 24px; }
+    .dh-counters { display: flex; gap: 30px; }
+    .dh-counter .n { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; color: var(--dh-ink); }
+    .dh-counter .n.accent { color: var(--dh-accent); }
+    .dh-counter .l { font-size: 12.5px; font-weight: 700; color: var(--dh-ink-3); margin-top: 6px; }
+    .dh-gauge-wrap { margin-top: 20px; }
+    .dh-segbar { display: flex; width: 100%; height: 9px; border-radius: 6px; overflow: hidden; background: var(--dh-surface-3); }
+    .dh-segbar > div { height: 100%; }
+    .dh-gauge-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; }
+    .dh-gl { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--dh-ink-2); font-weight: 600; }
+    .dh-gl b { color: var(--dh-ink); font-weight: 800; }
+    .dh-gl .sw { width: 10px; height: 10px; border-radius: 3px; }
+    .dh-version-line { font-size: 12px; color: var(--dh-ink-3); margin-top: 16px; }
+    .dh-version-line b { color: var(--dh-ink); font-weight: 700; }
+
+    /* Prominent out-of-sync banner (below the counters; hidden when in sync) */
+    .dh-syncbar { display: none; align-items: center; gap: 16px; padding: 16px 20px; margin-bottom: 18px; font-family: var(--dh-sans);
+      background: var(--dh-st-add-bg); border: 1px solid #fcd34d; border-left: 4px solid var(--dh-st-add); border-radius: var(--dh-r-lg); box-shadow: var(--dh-shadow-1); }
+    .dh-syncbar.visible { display: flex; }
+    .dh-syncbar .ic { width: 40px; height: 40px; border-radius: 11px; background: var(--dh-st-add); color: #fff; display: grid; place-items: center; flex: 0 0 auto; }
+    .dh-syncbar .body { flex: 1; min-width: 0; }
+    .dh-syncbar .t { font-size: 15px; font-weight: 800; color: #78350f; }
+    .dh-syncbar .d { font-size: 13px; color: #8a5a12; margin-top: 3px; line-height: 1.45; }
+    .dh-syncbar .dh-btn { flex: 0 0 auto; }
+
+    /* NOTE: the Settings tab's own styles live in _settings.html. */
+
+    @media (max-width: 920px) {
+      .dh-syncbar { flex-wrap: wrap; }
+    }
+
+    /* ============================================================
+       Layer tree (Claude Design handoff): controls + tree + detail
+       ============================================================ */
+    .dh-treebar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; font-family: var(--dh-sans); }
+    .dh-searchbox { position: relative; flex: 1; min-width: 220px; max-width: 380px; }
+    .dh-searchbox .dh-search-ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--dh-ink-4); pointer-events: none; display: grid; }
+    .dh-searchbox input { width: 100%; font-family: inherit; font-size: 13.5px; padding: 9px 34px 9px 36px; border: 1px solid var(--dh-line); border-radius: var(--dh-r-md); background: var(--dh-surface); color: var(--dh-ink); }
+    .dh-searchbox input:focus { outline: none; border-color: var(--dh-accent); box-shadow: 0 0 0 3px var(--dh-accent-soft); }
+    .dh-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: none; border: 0; background: none; padding: 3px; margin: 0; cursor: pointer; color: var(--dh-ink-4); line-height: 0; }
+    .dh-search-clear svg { display: block; }
+    .dh-search-clear:hover { color: var(--dh-ink-2); }
+    .dh-search-clear.show { display: block; }
+    .dh-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dh-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--dh-line); background: var(--dh-surface); color: var(--dh-ink-2); cursor: pointer; transition: .12s; font-family: var(--dh-sans); }
+    .dh-chip:hover { border-color: #cdd0d7; }
+    .dh-chip.active { background: var(--dh-ink); color: #fff; border-color: var(--dh-ink); }
+    .dh-chip .c { font-weight: 800; opacity: .8; }
+    .dh-chip .cd { width: 8px; height: 8px; border-radius: 50%; }
+    .dh-expand-btns { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .dh-iconbtn { width: 34px; height: 34px; padding: 0; border-radius: var(--dh-r-sm); border: 1px solid var(--dh-line); background: var(--dh-surface); color: var(--dh-ink-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; line-height: 0; }
+    .dh-iconbtn svg { display: block; }
+    .dh-iconbtn:hover { background: var(--dh-surface-2); color: var(--dh-ink); border-color: #cdd0d7; }
+
+    .dh-tree { background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: var(--dh-r-lg); overflow: hidden; box-shadow: var(--dh-shadow-1); font-family: var(--dh-sans); }
+    .dh-collapsible { display: none; }
+    .dh-collapsible.open { display: block; }
+    .dh-cat { border-bottom: 1px solid var(--dh-line-2); }
+    .dh-cat:last-child { border-bottom: 0; }
+    .dh-row { display: flex; align-items: center; gap: 11px; padding: 11px 16px; cursor: pointer; position: relative; }
+    .dh-row:hover { background: var(--dh-surface-2); }
+    .dh-cat-row { font-weight: 800; }
+    .dh-cat-ic { width: 30px; height: 30px; border-radius: 9px; background: var(--dh-accent-soft); color: var(--dh-accent-ink); display: grid; place-items: center; flex: 0 0 auto; }
+    .dh-chev { color: var(--dh-ink-4); transition: transform .16s; flex: 0 0 auto; display: grid; place-items: center; width: 18px; }
+    .dh-chev.open { transform: rotate(90deg); }
+    .dh-name { font-size: 14.5px; color: var(--dh-ink); min-width: 0; }
+    .dh-cat-row .dh-name { font-size: 15px; }
+    .dh-row-right { margin-left: auto; display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+    .dh-count { font-size: 12.5px; color: var(--dh-ink-3); font-weight: 700; white-space: nowrap; }
+    .dh-count b { color: var(--dh-accent-ink); }
+    .dh-minibar { width: 86px; }
+    .dh-sub-row { padding-left: 52px; }
+    .dh-sub-row .dh-name { font-weight: 700; font-size: 13.5px; color: var(--dh-ink-2); }
+    .dh-layers { background: #fcfcfd; border-top: 1px solid var(--dh-line-2); }
+    .dh-layer-row { padding-left: 80px; padding-top: 9px; padding-bottom: 9px; }
+    .dh-layer-row .dh-name { font-size: 13.5px; }
+    .dh-layer-meta { display: flex; align-items: center; gap: 8px; }
+
+    /* custom checkbox (tri-state) */
+    .dh-check { width: 19px; height: 19px; border-radius: 5px; border: 2px solid #c4c8d0; display: grid; place-items: center; flex: 0 0 auto; background: #fff; transition: .12s; color: #fff; }
+    .dh-check.on, .dh-check.mixed { background: var(--dh-accent); border-color: var(--dh-accent); }
+    .dh-check.mixed::after { content: ""; width: 9px; height: 2.5px; border-radius: 2px; background: #fff; }
+    .dh-check:hover { border-color: var(--dh-accent); }
+
+    /* badges + status dot */
+    .dh-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 2.5px 7px; border-radius: 5px; }
+    .dh-badge-type { background: #eef2fb; color: #3a5fb0; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+    .dh-badge-provider { background: #f3f0fb; color: #6a52c7; }
+    .dh-badge-origin { background: #fff4e6; color: #b5701a; }
+    .dh-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+
+    /* layer detail panel */
+    .dh-detail { padding: 4px 16px 18px 80px; background: #fcfcfd; }
+    .dh-detail-card { display: grid; grid-template-columns: 1fr 200px; gap: 18px; background: var(--dh-surface); border: 1px solid var(--dh-line); border-radius: var(--dh-r-md); padding: 16px 18px; }
+    .dh-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; }
+    .dh-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .dh-meta .k { font-size: 11px; font-weight: 800; color: var(--dh-ink-4); text-transform: uppercase; letter-spacing: .04em; }
+    .dh-meta .v { font-size: 13px; color: var(--dh-ink); font-weight: 600; word-break: break-word; }
+    .dh-meta .v.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+    .dh-meta .v a { color: var(--dh-accent-ink); }
+    .dh-flags { display: flex; gap: 7px; margin-top: 2px; flex-wrap: wrap; }
+    .dh-flag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .dh-flag.on { background: var(--dh-accent-soft); color: var(--dh-accent-ink); }
+    .dh-flag.off { background: var(--dh-surface-3); color: var(--dh-ink-4); }
+    .dh-thumb { border-radius: var(--dh-r-sm); background: repeating-conic-gradient(#eef0f3 0% 25%, #f7f8fa 0% 50%) 50% / 16px 16px; border: 1px solid var(--dh-line); display: grid; place-items: center; color: var(--dh-ink-4); font-size: 11px; font-weight: 700; text-align: center; min-height: 130px; padding: 8px; }
+    .dh-thumb img { max-width: 100%; border-radius: 4px; }
+    .dh-empty { padding: 50px 20px; text-align: center; color: var(--dh-ink-3); font-size: 14px; }
+    .dh-empty .ic { color: var(--dh-ink-4); margin-bottom: 10px; display: grid; place-items: center; }
+    @media (max-width: 920px) { .dh-detail-card { grid-template-columns: 1fr; } }
+
+    .catalog-preview-pane .preview-loading {
+        padding: 20px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    /* Sync results */
+    /* Sync result banner — same place & visual language as the out-of-sync
+       banner (.dh-syncbar): full-width, left-accent, rounded card. */
+    .sync-results {
+        display: none;
+        padding: 16px 46px 16px 20px;
+        margin-bottom: 18px;
+        border-radius: var(--dh-r-lg);
+        font-family: var(--dh-sans);
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.45;
+        border: 1px solid var(--dh-line);
+        border-left: 4px solid var(--dh-ink-4);
+        background: var(--dh-surface-2);
+        color: var(--dh-ink-2);
+        box-shadow: var(--dh-shadow-1);
+    }
+    .sync-results.visible { display: block; }
+    .sync-results.success {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        border-left-color: var(--dh-st-synced);
+        color: #065f46;
+    }
+    .sync-results.error {
+        background: #fbe6e4;
+        border-color: #f0cdc9;
+        border-left-color: var(--dh-st-remove);
+        color: #8a2c22;
+    }
+    /* dismiss (×) — sibling of #sync-results, shown only while a result is visible */
+    .sync-results-close {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        transform: translateY(-50%);
+        border: 0;
+        background: none;
+        padding: 4px;
+        margin: 0;
+        line-height: 0;
+        cursor: pointer;
+        color: var(--dh-accent);
+    }
+    .sync-results-close:hover { color: var(--dh-accent-ink); }
+    .sync-results.visible ~ .sync-results-close { display: block; }
+
+    /* Admin Boundaries tab */
+    .boundary-config {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        padding: 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+    .boundary-config-item .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+    .boundary-config-item .value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+    }
+    .boundary-warning {
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        color: #92400e;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+    .boundary-levels-table {
+        border-collapse: collapse;
+        width: 100%;
+        max-width: 480px;
+        font-size: 13px;
+    }
+    .boundary-levels-table th,
+    .boundary-levels-table td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 12px;
+        text-align: left;
+    }
+    .boundary-levels-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+    }
+    .boundary-map {
+        width: 100%;
+        height: 460px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #eef2f7;
+    }
+    .boundary-map .placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% trans "Dataset helper" as header_title %}
+{% url "dataset_helper:js_catalog" as js_catalog_url %}
+{% include "wagtailadmin/shared/header.html" with title=header_title icon="pick" %}
+<script src="{{ js_catalog_url }}"></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<div class="nice-padding">
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Tab Navigation -->
+    {% trans "Complete the required settings first" as locked_title %}
+    <div class="tabs">
+        <button class="tab-button{% if settings_valid %} active{% else %} locked{% endif %}" data-tab="catalog"{% if not settings_valid %} title="{{ locked_title }}"{% endif %}>{% trans "Layer Catalog" %}<span class="dh-tab-badge" id="tab-pending-badge" style="display:none;"></span></button>
+        <button class="tab-button{% if not settings_valid %} locked{% endif %}" data-tab="admin-boundaries"{% if not settings_valid %} title="{{ locked_title }}"{% endif %}>{% trans "Admin Boundaries" %}</button>
+        <button class="tab-button{% if not settings_valid %} active{% endif %}" data-tab="settings">{% trans "Settings" %}</button>
+        <button class="tab-button{% if not settings_valid %} locked{% endif %}" data-tab="danger-zone"{% if not settings_valid %} title="{{ locked_title }}"{% endif %}>{% trans "Danger Zone" %}</button>
+    </div>
+
+    <!-- Settings Tab (self-contained partial) -->
+    {% include "dataset_helper/_settings.html" %}
+
+    <!-- Layer Catalog Tab -->
+    <div id="catalog" class="tab-content{% if settings_valid %} active{% endif %}">
+        <!-- Catalog header: description, catalog state, documentation link -->
+        <div class="dh-toprow">
+            <div class="dh-crumb">GeoManager · {% trans "Layer catalog for the Climweb map viewer" %}</div>
+            <div class="dh-toprow-right">
+                <span class="dh-vchip" id="dh-version-chip" style="display:none;"><span class="dot"></span>{% trans "Catalog" %} <b id="dh-version-chip-v"></b></span>
+                <a class="dh-doclink" href="https://fgg-consultant.github.io/dataset-helper-plugin/{% if LANGUAGE_CODE != 'fr' %}en/{% endif %}" target="_blank" rel="noopener">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    {% trans "Plugin Documentation" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Update banner: shown only when a newer embedded catalog version is available -->
+        <div id="catalog-version-banner" class="dh-update">
+            <div class="dh-update-ic">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>
+            </div>
+            <div class="dh-update-body">
+                <div class="dh-update-title">{% trans "A new catalog version is available" %} — <b id="dh-update-version"></b></div>
+                <div class="dh-update-sub" id="dh-update-sub">{% trans "Compare the changeset and import the new version." %}</div>
+            </div>
+            <div class="dh-update-actions">
+                <button class="dh-btn dh-btn-ghost dh-btn-sm" onclick="dismissUpdateBanner()">{% trans "Later" %}</button>
+                <button class="dh-btn dh-btn-primary dh-btn-md" onclick="reviewCatalogChanges()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    {% trans "Review changes" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty state: no catalog loaded yet — shown alone (warning block) -->
+        <div id="catalog-empty-state" class="dh-empty-warn">
+            <div class="dh-empty-ic">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+            </div>
+            <div class="dh-empty-body">
+                <div class="dh-empty-title">{% trans "No catalog loaded yet" %}</div>
+                <div class="dh-empty-text">{% trans "The local catalog is empty. Load the embedded catalog to populate it, then synchronize with Climweb." %}</div>
+            </div>
+            <button id="load-catalog-btn-empty" class="dh-btn dh-btn-primary dh-btn-md js-load-btn" onclick="loadEmbeddedCatalogDirect()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 4 5-4"/><path d="M5 21h14"/></svg>
+                {% trans "Load catalog" %}
+            </button>
+        </div>
+
+        <!-- Catalog preview pane (filled by JS after a successful preview call) -->
+        <div id="catalog-preview-pane" class="catalog-preview-pane">
+            <div id="catalog-preview-body"></div>
+        </div>
+
+        <!-- Overview: counters + status gauge + Climweb sync state -->
+        <div class="dh-card dh-overview" id="catalog-overview">
+            <div class="dh-ov-left">
+                <div class="dh-counters">
+                    <div class="dh-counter"><div class="n" id="stat-total">-</div><div class="l">{% trans "Catalog layers" %}</div></div>
+                    <div class="dh-counter"><div class="n accent" id="stat-enabled">-</div><div class="l">{% trans "Enabled" %}</div></div>
+                    <div class="dh-counter"><div class="n" id="stat-synced">-</div><div class="l">{% trans "Synced" %}</div></div>
+                </div>
+                <div class="dh-gauge-wrap">
+                    <div class="dh-segbar" id="dh-gauge"></div>
+                    <div class="dh-gauge-legend" id="dh-gauge-legend"></div>
+                </div>
+                <div class="dh-version-line" id="dh-version-line"></div>
+            </div>
+        </div>
+
+        <!-- Out-of-sync banner — prominent, shown only when Climweb differs from the local catalog -->
+        <div id="dh-sync-panel" class="dh-syncbar" style="display:none;"></div>
+
+        <!-- Sync result — appears in the same spot, in the same visual language -->
+        <div style="position:relative;">
+            <div id="sync-results" class="sync-results"></div>
+            <button class="sync-results-close" onclick="dismissSyncResult()" title="{% trans 'Dismiss' %}" aria-label="{% trans 'Dismiss' %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div id="catalog-toolbar" class="catalog-toolbar" style="display:flex;gap:9px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="dh-btn dh-btn-md" style="background:#fff;color:#cf3b2e;border:1px solid #f0cdc9;" onclick="resetCatalog()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+                {% trans "Reset Catalog" %}
+            </button>
+        </div>
+
+        <!-- Tree controls: search + status filters + expand/collapse -->
+        <div id="tree-controls" class="dh-treebar">
+            <div class="dh-searchbox">
+                <span class="dh-search-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg></span>
+                <input type="text" id="catalog-search" oninput="onCatalogSearch(this.value)" onkeydown="if(event.key==='Escape'){event.preventDefault();clearCatalogSearch();}" placeholder="{% trans 'Search a layer, a provider…' %}">
+                <button type="button" class="dh-search-clear" id="catalog-search-clear" onclick="clearCatalogSearch()" title="{% trans 'Clear search' %}" aria-label="{% trans 'Clear search' %}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="dh-chips" id="catalog-chips">
+                <button class="dh-chip active" id="chip-all" onclick="onCatalogFilter('all')">{% trans "All" %}</button>
+                <button class="dh-chip" id="chip-pending_add" onclick="onCatalogFilter('pending_add')"><span class="cd" style="background:var(--dh-st-add)"></span>{% trans "To add" %}<span class="c" id="chip-count-pending_add"></span></button>
+                <button class="dh-chip" id="chip-pending_remove" onclick="onCatalogFilter('pending_remove')"><span class="cd" style="background:var(--dh-st-remove)"></span>{% trans "To remove" %}<span class="c" id="chip-count-pending_remove"></span></button>
+                <button class="dh-chip" id="chip-disabled" onclick="onCatalogFilter('disabled')"><span class="cd" style="background:var(--dh-st-disabled)"></span>{% trans "Disabled" %}<span class="c" id="chip-count-disabled"></span></button>
+            </div>
+            <div class="dh-expand-btns">
+                <button class="dh-iconbtn" onclick="selectAllLayers()" title="{% trans 'Select all layers' %}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/></svg></button>
+                <button class="dh-iconbtn" onclick="deselectAllLayers()" title="{% trans 'Deselect all layers' %}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/></svg></button>
+                <span style="width:1px;height:20px;background:var(--dh-line);margin:0 3px;"></span>
+                <button class="dh-iconbtn" onclick="expandAllNodes()" title="{% trans 'Expand all' %}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg></button>
+                <button class="dh-iconbtn" onclick="collapseAllNodes()" title="{% trans 'Collapse all' %}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 18 5-5 5 5"/><path d="m7 11 5-5 5 5"/></svg></button>
+            </div>
+        </div>
+
+        <!-- Catalog Tree -->
+        <div id="catalog-tree" class="dh-tree"></div>
+    </div>
+
+    <!-- Admin Boundaries Tab -->
+    <div id="admin-boundaries" class="tab-content">
+        <p style="margin:0 0 16px;color:#374151;font-size:14px;line-height:1.6;">
+            {% blocktrans %}Bootstrap the Climweb <strong>administrative boundaries</strong> layer from the OCHA Common Operational Datasets (COD-AB) published on HDX. The shapefile archive for the configured country is downloaded, its columns are normalized per admin level, and every level is loaded into the boundary manager (served as vector tiles).{% endblocktrans %}
+        </p>
+
+        <div class="boundary-config">
+            <div class="boundary-config-item">
+                <div class="label">{% trans "Source" %}</div>
+                <div class="value" id="boundary-source">OCHA COD-AB</div>
+            </div>
+            <div class="boundary-config-item">
+                <div class="label">{% trans "Country" %}</div>
+                <div class="value" id="boundary-country">
+                    {% if plugin_settings.country_name %}{{ plugin_settings.country_name }} ({{ plugin_settings.country_alpha3|upper }}){% else %}<span style="color:#dc2626;">{% trans "not configured" %}</span>{% endif %}
+                </div>
+            </div>
+            <div class="boundary-config-item">
+                <div class="label">{% trans "Features loaded" %}</div>
+                <div class="value" id="boundary-total">-</div>
+            </div>
+        </div>
+
+        <div id="boundary-warning" class="boundary-warning" style="display:none;"></div>
+
+        <details style="margin:16px 0;padding:10px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;color:#374151;line-height:1.6;">
+            <summary style="cursor:pointer;font-weight:500;">{% trans "How it works" %}</summary>
+            <ol style="margin:8px 0 0 16px;padding:0;">
+                <li>{% blocktrans %}The country comes from the <strong>plugin settings</strong> (ISO codes). Set it on the <em>Settings</em> tab first.{% endblocktrans %}</li>
+                <li>{% blocktrans %}The COD-AB shapefile ZIP is located on HDX automatically (<code>cod-ab-&lt;iso3&gt;</code>) and downloaded.{% endblocktrans %}</li>
+                <li>{% blocktrans %}Each admin level (adm0, adm1, …) is extracted, its columns are normalized, re-zipped and loaded.{% endblocktrans %}</li>
+                <li>{% blocktrans %}Re-running the import replaces the previously loaded levels for this country (idempotent).{% endblocktrans %}</li>
+            </ol>
+        </details>
+
+        <div class="catalog-toolbar">
+            <button id="boundary-import-btn" class="import-button" onclick="importBoundaries()">
+                {% trans "Import boundaries from OCHA" %}
+            </button>
+            <button class="danger-button" onclick="clearBoundaries()">
+                {% trans "Clear boundaries" %}
+            </button>
+        </div>
+
+        <div id="boundary-results" class="results-panel" style="margin-top:16px;"></div>
+
+        <h4 style="margin:24px 0 8px;">{% trans "Loaded admin levels" %}</h4>
+        <div id="boundary-levels" style="font-size:13px;color:#6b7280;">{% trans "Loading…" %}</div>
+
+        <h4 style="margin:24px 0 8px;">{% trans "Map preview" %}</h4>
+        <p style="margin:0 0 8px;font-size:12px;color:#6b7280;">
+            {% trans "Vector tiles served by the boundary manager." %}
+            <code id="boundary-tiles-url"></code>
+        </p>
+        <div id="boundary-map" class="boundary-map"></div>
+    </div>
+
+    <!-- Danger Zone Tab -->
+    <div id="danger-zone" class="tab-content">
+        <div class="danger-zone">
+            <h3>{% trans "Danger Zone" %}</h3>
+
+            <h4 style="margin-top: 8px;">{% trans "Clear catalog-managed datasets" %}</h4>
+            <p style="margin-bottom: 12px;">
+                {% blocktrans %}Delete every Climweb Dataset this plugin provisioned (tracked via
+                <code>CatalogEntry.dataset_id</code>) and its dedicated Metadata,
+                then sweep any SubCategories and Categories that no longer hold
+                anything. <strong>Datasets you created outside the plugin are kept</strong>;
+                so are taxonomy nodes still pointed to by non-plugin Datasets.
+                Catalog entries go back to <em>pending_add</em> and can be
+                re-provisioned by clicking <em>Synchronize with Climweb</em>.{% endblocktrans %}
+            </p>
+            <button id="clear-provisioned-button" class="danger-button" onclick="clearProvisioned()">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                {% trans "Clear catalog-managed datasets" %}
+            </button>
+            <div id="clear-provisioned-results" class="results-panel" style="margin-top: 16px;"></div>
+
+            <hr style="margin: 28px 0; border: none; border-top: 1px solid #fecaca;">
+
+            <h4 style="color: #991b1b;">{% trans "Wipe ALL Climweb data (nuclear)" %}</h4>
+            <p style="margin-bottom: 12px;">
+                {% blocktrans %}This deletes <strong>every</strong> Dataset, SubCategory, and Category
+                in the Climweb geomanager — including any not created by this plugin.
+                Use only if you understand what this implies. Cannot be undone.{% endblocktrans %}
+            </p>
+            <button id="clear-all-button" class="danger-button" onclick="clearAll()">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                {% trans "Clear All Datasets & Categories" %}
+            </button>
+            <div id="clear-results-panel" class="results-panel" style="margin-top: 16px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+  // i18n fallback (in case JavaScriptCatalog hasn't loaded)
+  if (typeof window.gettext === 'undefined') { window.gettext = s => s }
+  if (typeof window.interpolate === 'undefined') { window.interpolate = (fmt, obj, named) => named ? fmt.replace(/%\(\w+\)s/g, m => obj[m.slice(2, -2)]) : fmt }
+
+  // Get CSRF token from cookie
+  function getCookie(name) {
+    let cookieValue = null
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';')
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim()
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+          break
+        }
+      }
+    }
+    return cookieValue
+  }
+
+  // Tab switching. Tabs flagged "locked" (until the mandatory settings are
+  // saved) are not navigable. activateTab/setTabsLocked are exposed on window
+  // so the Settings tab (_settings.html) can unlock the others and jump to them.
+  function activateTab(tabId) {
+    const btn = document.querySelector('.tab-button[data-tab="' + tabId + '"]')
+    if (!btn || btn.classList.contains('locked')) return
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'))
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    btn.classList.add('active')
+    const content = document.getElementById(tabId)
+    if (content) content.classList.add('active')
+    if (tabId === 'admin-boundaries') onBoundariesTabShown()
+  }
+  window.activateTab = activateTab
+
+  function setTabsLocked(locked) {
+    document.querySelectorAll('.tab-button').forEach(b => {
+      if (b.getAttribute('data-tab') === 'settings') return
+      b.classList.toggle('locked', locked)
+      if (locked) b.setAttribute('title', gettext('Complete the required settings first'))
+      else b.removeAttribute('title')
+    })
+  }
+  window.setTabsLocked = setTabsLocked
+
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() { activateTab(this.getAttribute('data-tab')) })
+  })
+
+  // Clear only plugin-provisioned datasets (selective).
+  async function clearProvisioned() {
+    const confirmed = confirm(
+      gettext('Delete all Climweb Datasets that this plugin provisioned?') + '\n\n' +
+      gettext('Datasets created outside the plugin will be kept.') + '\n' +
+      gettext('Catalog entries will be reset to pending_add.') + '\n\n' +
+      gettext('This action cannot be undone.')
+    )
+    if (!confirmed) return
+
+    const button = document.getElementById('clear-provisioned-button')
+    const resultsPanel = document.getElementById('clear-provisioned-results')
+
+    const originalHtml = button.innerHTML
+    button.disabled = true
+    button.innerHTML = '<span class="loading-spinner"></span>' + gettext('Clearing…')
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_clear_provisioned" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'include'
+      })
+      const data = await response.json()
+      resultsPanel.classList.add('visible')
+
+      if (data.status === 'success') {
+        resultsPanel.classList.remove('error')
+        resultsPanel.classList.add('success')
+        resultsPanel.innerHTML = `
+          <h4 style="color: #059669; margin-top: 0;">${gettext('Catalog datasets cleared')}</h4>
+          <div class="results-summary">
+            <div class="result-stat">
+              <div class="number">${data.datasets_deleted}</div>
+              <div class="label">${gettext('Datasets Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.metadata_deleted}</div>
+              <div class="label">${gettext('Metadata Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.subcategories_deleted}</div>
+              <div class="label">${gettext('Empty SubCategories Swept')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.categories_deleted}</div>
+              <div class="label">${gettext('Empty Categories Swept')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.entries_reset}</div>
+              <div class="label">${gettext('Catalog Entries Reset')}</div>
+            </div>
+          </div>
+          <p style="margin-top: 16px;">
+            ${gettext('Datasets, SubCategories and Categories that did not come from this plugin were preserved.')}
+            <a href="javascript:window.location.reload()" style="color: #059669;">${gettext('Refresh the page')}</a>
+            ${gettext('to see the updated state.')}
+          </p>
+        `
+      } else {
+        resultsPanel.classList.remove('success')
+        resultsPanel.classList.add('error')
+        resultsPanel.innerHTML = `<p style="color: #dc2626;">${gettext('Error')}: ${escapeHtml(data.message || gettext('Clear failed'))}</p>`
+      }
+    } catch (error) {
+      resultsPanel.classList.add('visible', 'error')
+      resultsPanel.classList.remove('success')
+      resultsPanel.innerHTML = `<p style="color: #dc2626;">${gettext('Error')}: ${escapeHtml(error.message)}</p>`
+    }
+
+    button.disabled = false
+    button.innerHTML = originalHtml
+  }
+
+  // Clear all datasets and categories
+  async function clearAll() {
+    const confirmed = confirm(
+      gettext('Are you sure you want to delete ALL datasets, subcategories, and categories?') + '\n\n' +
+      gettext('This action CANNOT be undone!')
+    )
+
+    if (!confirmed) return
+
+    // Double confirmation for safety
+    const doubleConfirmed = confirm(
+      gettext('This is your LAST CHANCE to cancel.') + '\n\n' +
+      gettext('Click OK to permanently delete all data, or Cancel to abort.')
+    )
+
+    if (!doubleConfirmed) return
+
+    const button = document.getElementById('clear-all-button')
+    const resultsPanel = document.getElementById('clear-results-panel')
+
+    // Show loading state
+    button.disabled = true
+    button.innerHTML = '<span class="loading-spinner"></span>' + gettext('Clearing...')
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:clear_all" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      resultsPanel.classList.add('visible')
+
+      if (data.status === 'success' || data.status === 'partial') {
+        const isPartial = data.status === 'partial'
+        const color = isPartial ? '#d97706' : '#059669'
+        resultsPanel.classList.remove('error')
+        resultsPanel.classList.add('success')
+
+        let errorsHtml = ''
+        if (data.errors && data.errors.length) {
+          errorsHtml = `
+            <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px;">
+              <h5 style="color: #92400e; margin: 0 0 8px 0;">${interpolate(gettext('%(count)s item(s) could not be deleted:'), {count: data.errors.length}, true)}</h5>
+              <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 13px;">
+                ${data.errors.map(e => `<li>${e}</li>`).join('')}
+              </ul>
+            </div>
+          `
+        }
+
+        resultsPanel.innerHTML = `
+          <h4 style="color: ${color}; margin-top: 0;">${isPartial ? gettext('Completed with some errors') : gettext('All data cleared successfully!')}</h4>
+          <div class="results-summary">
+            <div class="result-stat">
+              <div class="number">${data.deleted.categories}</div>
+              <div class="label">${gettext('Categories Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.deleted.subcategories}</div>
+              <div class="label">${gettext('Subcategories Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.deleted.datasets}</div>
+              <div class="label">${gettext('Datasets Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.deleted.metadata}</div>
+              <div class="label">${gettext('Metadata Deleted')}</div>
+            </div>
+            <div class="result-stat">
+              <div class="number">${data.deleted.wms_layers}</div>
+              <div class="label">${gettext('WMS Layers Deleted')}</div>
+            </div>
+          </div>
+          ${errorsHtml}
+          <p style="margin-top: 16px;">
+            <a href="javascript:window.location.reload()" style="color: ${color};">${gettext('Refresh the page')}</a> ${gettext('to see the updated state.')}
+          </p>
+        `
+      } else {
+        resultsPanel.classList.remove('success')
+        resultsPanel.classList.add('error')
+        resultsPanel.innerHTML = `<p style="color: #dc2626;">${gettext('Error')}: ${data.message}</p>`
+      }
+
+    } catch (error) {
+      resultsPanel.classList.add('visible', 'error')
+      resultsPanel.classList.remove('success')
+      resultsPanel.innerHTML = `<p style="color: #dc2626;">${gettext('Error')}: ${error.message}</p>`
+    }
+
+    // Reset button
+    button.disabled = false
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        <line x1="10" y1="11" x2="10" y2="17"></line>
+        <line x1="14" y1="11" x2="14" y2="17"></line>
+      </svg>
+      ${gettext('Clear All Datasets & Categories')}
+    `
+  }
+
+  // ── Catalog functions ──────────────────────────────────────────────────────
+
+  // ── Preview / Apply flow ───────────────────────────────────────────────────
+
+  function _renderBucketSection(label, items, className, opts) {
+    if (!items || items.length === 0) return ''
+    const open = opts && opts.open ? ' open' : ''
+    const rows = items.map(e =>
+      `<li>${escapeHtml(e.title || e.product_code)}` +
+      `<span class="path"> — ${escapeHtml(e.category || '')} › ${escapeHtml(e.subcategory || '')}</span></li>`
+    ).join('')
+    return `<details class="bucket ${className}"${open}>` +
+      `<summary>${escapeHtml(label)} (${items.length})</summary>` +
+      `<ul>${rows}</ul></details>`
+  }
+
+  function renderPreviewPane(data) {
+    const body = document.getElementById('catalog-preview-body')
+    if (!body) return
+
+    const conflicts = data.conflict || []
+    const toAdd     = data.to_add || []
+    const cleanUpd  = data.clean_update || []
+    const drift     = data.local_drift || []
+    const toRemove  = data.to_remove || []
+    const unchanged = data.unchanged || 0
+
+    const fromV = data.loaded_version
+      ? `v${escapeHtml(data.loaded_version)}`
+      : gettext('(no version)')
+    const toV = data.catalog_version
+      ? `v${escapeHtml(data.catalog_version)}`
+      : gettext('(no version)')
+
+    const hasChange = toAdd.length + cleanUpd.length + conflicts.length + toRemove.length > 0
+
+    let html = `
+      <h3>${interpolate(gettext('Review catalog update — %(from)s → %(to)s'), {from: fromV, to: toV}, true)}</h3>
+      <div class="preview-sub">${gettext('Nothing has been written yet. Pick an apply mode or cancel.')}</div>
+      <div class="preview-counts">
+        <span class="pc"><span class="pc-dot add"></span><strong>${toAdd.length}</strong> ${gettext('new')}</span>
+        <span class="pc"><span class="pc-dot update"></span><strong>${cleanUpd.length}</strong> ${gettext('updated')}</span>
+        <span class="pc"><span class="pc-dot drift"></span><strong>${drift.length}</strong> ${gettext('local drift')}</span>
+        <span class="pc"><span class="pc-dot conflict"></span><strong>${conflicts.length}</strong> ${conflicts.length === 1 ? gettext('conflict') : gettext('conflicts')}</span>
+        <span class="pc"><span class="pc-dot remove"></span><strong>${toRemove.length}</strong> ${gettext('to remove')}</span>
+        <span class="pc"><span class="pc-dot unchanged"></span><strong>${unchanged}</strong> ${gettext('unchanged')}</span>
+      </div>
+    `
+
+    html += _renderBucketSection(gettext('Conflicts (catalog changed AND Wagtail edited)'), conflicts, 'conflict', { open: true })
+    html += _renderBucketSection(gettext('New entries to add'),                              toAdd,     'add',      {})
+    html += _renderBucketSection(gettext('Clean updates (catalog moved, no local edits)'),  cleanUpd,  'update',   {})
+    html += _renderBucketSection(gettext('Local drift (Wagtail-edited, catalog unchanged)'), drift,    'drift',    {})
+    html += _renderBucketSection(gettext('To remove (gone from catalog source)'),           toRemove,  'remove',   {})
+
+    if (data.errors && data.errors.length) {
+      const errs = data.errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')
+      html += `<details class="bucket conflict" open>
+        <summary>${gettext('Errors')} (${data.errors.length})</summary><ul>${errs}</ul></details>`
+    }
+
+    if (!hasChange) {
+      html += `<div class="preview-sub" style="margin-top:14px;">
+        ${gettext('Nothing to apply — catalog and database are in sync.')}</div>`
+    }
+
+    const skipLabel = conflicts.length
+      ? interpolate(
+          conflicts.length === 1
+            ? gettext('Apply — keep %(count)s local edit')
+            : gettext('Apply — keep %(count)s local edits'),
+          {count: conflicts.length}, true)
+      : gettext('Apply changes')
+
+    html += `<div class="preview-actions">`
+    if (hasChange) {
+      html += `<button class="btn-apply" onclick="applyPreview('skip')">${escapeHtml(skipLabel)}</button>`
+      if (conflicts.length) {
+        const overwriteLabel = interpolate(
+          conflicts.length === 1
+            ? gettext('Apply — overwrite %(count)s conflict')
+            : gettext('Apply — overwrite %(count)s conflicts'),
+          {count: conflicts.length}, true)
+        html += `<button class="btn-overwrite" onclick="applyPreview('overwrite')">${escapeHtml(overwriteLabel)}</button>`
+      }
+    }
+    html += `<button class="btn-cancel" onclick="cancelPreview()">${gettext('Cancel')}</button>`
+    html += `</div>`
+
+    body.innerHTML = html
+  }
+
+  async function reviewCatalogChanges() {
+    // Hide the banner while the preview is open; show the pane.
+    const banner = document.getElementById('catalog-version-banner')
+    const pane = document.getElementById('catalog-preview-pane')
+    const body = document.getElementById('catalog-preview-body')
+    if (banner) banner.classList.remove('visible')
+    if (pane) pane.classList.add('visible')
+    if (body) {
+      body.innerHTML = `<div class="preview-loading">
+        <span class="loading-spinner"></span> ${gettext('Computing changeset…')}</div>`
+    }
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_preview_embedded" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        credentials: 'include',
+      })
+      const data = await response.json()
+      if (data.status !== 'success') {
+        body.innerHTML = `<div class="preview-loading" style="color:#b91c1c;">
+          ${escapeHtml(data.message || gettext('Preview failed'))}</div>
+          <div class="preview-actions"><button class="btn-cancel" onclick="cancelPreview()">${gettext('Close')}</button></div>`
+        return
+      }
+      // Use the loaded_version we already had on catalogData so the title is meaningful
+      // even before the apply touches CatalogState.
+      data.loaded_version = (catalogData && catalogData.loaded_version) || ''
+      renderPreviewPane(data)
+    } catch (err) {
+      body.innerHTML = `<div class="preview-loading" style="color:#b91c1c;">
+        ${gettext('Preview failed:')} ${escapeHtml(err.message)}</div>
+        <div class="preview-actions"><button class="btn-cancel" onclick="cancelPreview()">${gettext('Close')}</button></div>`
+    }
+  }
+
+  function cancelPreview() {
+    const pane = document.getElementById('catalog-preview-pane')
+    if (pane) pane.classList.remove('visible')
+    // Re-render the banner from the cached catalogData (untouched since open).
+    if (catalogData) renderCatalogVersionBanner(catalogData)
+  }
+
+  async function applyPreview(conflictPolicy) {
+    const pane = document.getElementById('catalog-preview-pane')
+    const body = document.getElementById('catalog-preview-body')
+    if (body) {
+      body.innerHTML = `<div class="preview-loading">
+        <span class="loading-spinner"></span> ${interpolate(gettext('Applying changes (%(policy)s)…'), {policy: escapeHtml(conflictPolicy)}, true)}</div>`
+    }
+    const resultsEl = document.getElementById('sync-results')
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_load_embedded" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ conflict_policy: conflictPolicy }),
+        credentials: 'include',
+      })
+      const result = await response.json()
+      if (pane) pane.classList.remove('visible')
+      if (result.status === 'success') {
+        resultsEl.className = 'sync-results visible success'
+        resultsEl.innerHTML = escapeHtml(result.message || gettext('Catalog loaded'))
+      } else {
+        resultsEl.className = 'sync-results visible error'
+        resultsEl.innerHTML = escapeHtml(result.message || gettext('Apply failed'))
+      }
+      await loadCatalog(false)
+    } catch (err) {
+      if (pane) pane.classList.remove('visible')
+      resultsEl.className = 'sync-results visible error'
+      resultsEl.innerHTML = gettext('Apply failed: ') + escapeHtml(err.message)
+    }
+  }
+
+  // Load the embedded catalog directly, without the review/diff step. Used from
+  // the empty state where the local catalog is empty, so there is nothing to
+  // conflict with — applying straight away is the fast, expected path.
+  async function loadEmbeddedCatalogDirect() {
+    const resultsEl = document.getElementById('sync-results')
+    if (resultsEl) {
+      resultsEl.className = 'sync-results visible'
+      resultsEl.innerHTML = '<span class="loading-spinner" style="border-color:#059669;border-top-color:transparent;"></span> ' + gettext('Loading catalog…')
+    }
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_load_embedded" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conflict_policy: 'overwrite' }),
+        credentials: 'include',
+      })
+      const result = await response.json()
+      if (resultsEl) {
+        resultsEl.className = 'sync-results visible ' + (result.status === 'success' ? 'success' : 'error')
+        resultsEl.innerHTML = escapeHtml(result.message || (result.status === 'success' ? gettext('Catalog loaded') : gettext('Load failed')))
+      }
+      await loadCatalog(false)
+    } catch (err) {
+      if (resultsEl) {
+        resultsEl.className = 'sync-results visible error'
+        resultsEl.innerHTML = gettext('Load failed: ') + escapeHtml(err.message)
+      }
+    }
+  }
+
+  function _formatLoadedAt(iso) {
+    if (!iso) return ''
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleString()
+  }
+
+  // Inline Lucide-ish icons for JS-rendered upper UI
+  function _dhIcon(name, size, sw) {
+    const P = {
+      check: '<path d="M20 6 9 17l-5-5"/>',
+      alert: '<path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+      sync: '<path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-7.5-4"/><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 7.5 4"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/>',
+      plus: '<path d="M12 5v14M5 12h14"/>',
+      trash: '<path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>',
+    }
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw || 2}" stroke-linecap="round" stroke-linejoin="round">${P[name] || ''}</svg>`
+  }
+
+
+  function renderSyncStatus(data) {
+    const total = data.total || 0
+    const enabled = data.enabled || 0
+    const synced = data.synced || 0
+    const add = data.pending_add || 0
+    const remove = data.pending_remove || 0
+    const update = data.pending_update || 0
+    const disabled = Math.max(0, total - enabled - remove)
+    const pending = add + remove + update
+
+    // ---- status gauge + legend ----
+    const gauge = document.getElementById('dh-gauge')
+    const legend = document.getElementById('dh-gauge-legend')
+    if (gauge && legend) {
+      const segs = [
+        { label: gettext('Synced'), value: synced, color: 'var(--dh-st-synced)' },
+        { label: gettext('To add'), value: add, color: 'var(--dh-st-add)' },
+        { label: gettext('To remove'), value: remove, color: 'var(--dh-st-remove)' },
+        { label: gettext('Disabled'), value: disabled, color: 'var(--dh-st-disabled)' },
+      ]
+      const tot = segs.reduce((a, s) => a + s.value, 0) || 1
+      gauge.innerHTML = segs.filter(s => s.value > 0).map(s =>
+        `<div title="${escapeHtml(s.label)}: ${s.value}" style="width:${(s.value / tot * 100)}%;background:${s.color};"></div>`).join('')
+      legend.innerHTML = segs.map(s =>
+        `<span class="dh-gl"><span class="sw" style="background:${s.color};"></span><b>${s.value}</b> ${escapeHtml(s.label)}</span>`).join('')
+    }
+
+    // ---- pending badge on the catalog tab ----
+    const tabBadge = document.getElementById('tab-pending-badge')
+    if (tabBadge) {
+      if (pending > 0) { tabBadge.textContent = pending; tabBadge.style.display = 'inline-block' }
+      else { tabBadge.style.display = 'none' }
+    }
+
+    // ---- version line (always shown under the gauge) ----
+    const verLine = document.getElementById('dh-version-line')
+    if (verLine) {
+      const loaded = data.loaded_version || ''
+      const loadedAt = _formatLoadedAt(data.loaded_at)
+      if (!loaded) {
+        verLine.innerHTML = ''
+      } else {
+        let s = interpolate(gettext('Catalog <b>v%(v)s</b>'), {v: escapeHtml(loaded)}, true)
+        if (loadedAt) s += ' · ' + interpolate(gettext('loaded %(d)s'), {d: escapeHtml(loadedAt)}, true)
+        verLine.innerHTML = s
+      }
+    }
+
+    // ---- out-of-sync banner: prominent, below the counters, ONLY when desynced ----
+    const panel = document.getElementById('dh-sync-panel')
+    if (!panel) return
+    if (total === 0 || pending === 0) {
+      panel.style.display = 'none'
+      panel.innerHTML = ''
+      return
+    }
+    const noteParts = []
+    if (add) noteParts.push(interpolate(gettext('%(n)s to create'), {n: add}, true))
+    if (remove) noteParts.push(interpolate(gettext('%(n)s to remove'), {n: remove}, true))
+    if (update) noteParts.push(interpolate(gettext('%(n)s to update'), {n: update}, true))
+    panel.innerHTML =
+      `<div class="ic">${_dhIcon('alert', 22, 2.2)}</div>` +
+      `<div class="body">` +
+        `<div class="t">${gettext('Catalog out of sync with Climweb')}</div>` +
+        `<div class="d">${interpolate(ngettext('%(n)s pending change', '%(n)s pending changes', pending), {n: pending}, true)} — ${escapeHtml(noteParts.join(', '))}.</div>` +
+      `</div>` +
+      `<button class="dh-btn dh-btn-primary dh-btn-md" onclick="syncCatalog()">${_dhIcon('sync', 17)}<span>${gettext('Synchronize with Climweb')}</span><span class="dh-btn-badge">${pending}</span></button>`
+    panel.style.display = 'flex'
+  }
+
+  let _updateBannerDismissed = false
+  let _previewedFor = null   // embedded_version whose bucket counts we already fetched
+
+  function dismissUpdateBanner() {
+    _updateBannerDismissed = true
+    const b = document.getElementById('catalog-version-banner')
+    if (b) b.classList.remove('visible')
+  }
+
+  function dismissSyncResult() {
+    const el = document.getElementById('sync-results')
+    if (el) { el.className = 'sync-results'; el.innerHTML = '' }
+  }
+
+  function renderCatalogVersionBanner(data) {
+    const embedded = data.embedded_version || ''
+    const loaded = data.loaded_version || ''
+    const updateAvailable = !!data.update_available
+
+    // Version chip in the top row — always reflects the loaded revision.
+    const chip = document.getElementById('dh-version-chip')
+    const chipV = document.getElementById('dh-version-chip-v')
+    if (chip && chipV) {
+      if (loaded) { chipV.textContent = 'v' + loaded; chip.style.display = 'inline-flex' }
+      else if (embedded) { chipV.textContent = gettext('not loaded'); chip.style.display = 'inline-flex' }
+      else { chip.style.display = 'none' }
+    }
+
+    // Update banner — only when a newer embedded version is available AND a
+    // catalog is actually loaded. When nothing is loaded, the empty-state
+    // warning block is the only thing shown.
+    const banner = document.getElementById('catalog-version-banner')
+    if (!banner) return
+    const nothingLoaded = (data.total || 0) === 0
+    if (updateAvailable && embedded && loaded && !nothingLoaded && !_updateBannerDismissed) {
+      banner.classList.add('visible')
+      const verEl = document.getElementById('dh-update-version')
+      if (verEl) verEl.textContent = 'v' + embedded
+      if (_previewedFor !== embedded) { _previewedFor = embedded; _fillUpdateBuckets() }
+    } else {
+      banner.classList.remove('visible')
+    }
+  }
+
+  // Fill the update banner's one-line changeset summary (new / updated / conflicts
+  // / removed) by reusing the dry-run preview endpoint. Degrades gracefully.
+  async function _fillUpdateBuckets() {
+    const sub = document.getElementById('dh-update-sub')
+    if (!sub) return
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const r = await fetch('{% url "dataset_helper:catalog_preview_embedded" %}', {
+        method: 'POST', headers: { 'X-CSRFToken': csrftoken }, credentials: 'include',
+      })
+      const d = await r.json()
+      if (d.status !== 'success') return
+      const nNew = (d.to_add || []).length
+      const nUpd = (d.clean_update || []).length + (d.local_drift || []).length
+      const nConf = (d.conflict || []).length
+      const nRem = (d.to_remove || []).length
+      const seg = (color, icon, n, label) =>
+        `<span class="s" style="color:${color};">${_dhIcon(icon, 13, 2.4)}${n} ${label}</span>`
+      sub.innerHTML =
+        seg('var(--dh-bk-new)', 'plus', nNew, gettext('new')) +
+        seg('var(--dh-bk-updated)', 'sync', nUpd, gettext('updated')) +
+        seg('var(--dh-bk-conflict)', 'alert', nConf, gettext('conflicts')) +
+        seg('var(--dh-bk-remove)', 'trash', nRem, gettext('removed'))
+    } catch (e) { /* keep the generic sub-line */ }
+  }
+
+  let catalogData = null
+  // Track which groups are open so we can restore state after re-render
+  let openGroups = new Set()
+  let catalogSearch = ''
+  let catalogFilter = 'all'   // all | pending_add | pending_remove | disabled
+
+  // --- tree helpers ---
+  const DH_STATUS_COLOR = {
+    synced: 'var(--dh-st-synced)', pending_add: 'var(--dh-st-add)',
+    pending_remove: 'var(--dh-st-remove)', disabled: 'var(--dh-st-disabled)',
+  }
+  function _chev(size) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`
+  }
+  function _checkHtml(state) {
+    const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+    return `<span class="dh-check ${state}">${state === 'on' ? check : ''}</span>`
+  }
+  function _nodeState(entries) {
+    const on = entries.filter(e => e.enabled).length
+    if (on === 0) return 'off'
+    if (on === entries.length) return 'on'
+    return 'mixed'
+  }
+  function _miniSegbar(entries) {
+    const segs = [
+      ['synced', 'var(--dh-st-synced)'], ['pending_add', 'var(--dh-st-add)'],
+      ['pending_remove', 'var(--dh-st-remove)'], ['disabled', 'var(--dh-st-disabled)'],
+    ].map(([st, c]) => [entries.filter(e => e.status === st).length, c])
+    const tot = segs.reduce((a, [v]) => a + v, 0) || 1
+    return `<span class="dh-minibar"><span class="dh-segbar" style="height:6px;">` +
+      segs.filter(([v]) => v > 0).map(([v, c]) => `<div style="width:${v / tot * 100}%;background:${c};"></div>`).join('') +
+      `</span></span>`
+  }
+  function _matchEntry(entry, catTitle, subTitle) {
+    if (catalogFilter !== 'all' && entry.status !== catalogFilter) return false
+    const q = catalogSearch.trim().toLowerCase()
+    if (!q) return true
+    return [(entry.title || ''), (entry.layer_name || ''), (entry.meta_source || ''),
+            (catTitle || ''), (subTitle || '')].some(s => s.toLowerCase().includes(q))
+  }
+
+  function onCatalogSearch(value) {
+    catalogSearch = value
+    const clr = document.getElementById('catalog-search-clear')
+    if (clr) clr.classList.toggle('show', value.trim() !== '')
+    renderCatalog(false)
+  }
+  function clearCatalogSearch() {
+    const input = document.getElementById('catalog-search')
+    if (input) { input.value = ''; input.focus() }
+    onCatalogSearch('')   // empties the search → tree re-collapses to its manual state
+  }
+  function onCatalogFilter(f) {
+    catalogFilter = f
+    document.querySelectorAll('#catalog-chips .dh-chip').forEach(c => c.classList.remove('active'))
+    const el = document.getElementById('chip-' + f)
+    if (el) el.classList.add('active')
+    renderCatalog(false)
+  }
+  function renderTreeChips(data) {
+    const set = (id, v) => { const e = document.getElementById('chip-count-' + id); if (e) e.textContent = v }
+    set('pending_add', data.pending_add || 0)
+    set('pending_remove', data.pending_remove || 0)
+    set('disabled', Math.max(0, (data.total || 0) - (data.enabled || 0) - (data.pending_remove || 0)))
+  }
+
+  function _allEntryIds() {
+    if (!catalogData) return []
+    return (catalogData.categories || []).flatMap(c => c.subcategories.flatMap(s => s.entries.map(e => e.id)))
+  }
+  function selectAllLayers() { const ids = _allEntryIds(); if (ids.length) bulkToggleEntries(ids, true) }
+  function deselectAllLayers() { const ids = _allEntryIds(); if (ids.length) bulkToggleEntries(ids, false) }
+
+  async function loadCatalog(expandAll) {
+    try {
+      const response = await fetch('{% url "dataset_helper:catalog_tree" %}', {
+        credentials: 'include'
+      })
+      if (!response.ok && response.headers.get('content-type')?.indexOf('application/json') === -1) {
+        throw new Error(`Server error ${response.status}`)
+      }
+      catalogData = await response.json()
+      renderCatalog(expandAll)
+    } catch (error) {
+      console.error('Failed to load catalog:', error)
+    }
+  }
+
+  function renderCatalog(expandAll) {
+    if (!catalogData) return
+
+    const searching = catalogSearch.trim() !== '' || catalogFilter !== 'all'
+    // NB: openGroups is the source of truth for manual expand state (maintained
+    // by toggleCollapsible / expand-collapse-all). We do NOT snapshot the DOM
+    // here — otherwise the nodes force-opened by a search would get persisted,
+    // and clearing the search would leave the tree expanded instead of
+    // collapsing back to the user's manual state.
+
+    // Update overview counters + live panels + filter chip counts
+    document.getElementById('stat-total').textContent = catalogData.total || 0
+    document.getElementById('stat-enabled').textContent = catalogData.enabled || 0
+    document.getElementById('stat-synced').textContent = catalogData.synced || 0
+    renderSyncStatus(catalogData)
+    renderCatalogVersionBanner(catalogData)
+    renderTreeChips(catalogData)
+
+    const tree = document.getElementById('catalog-tree')
+    const categories = catalogData.categories || []
+    const isEmpty = categories.length === 0
+
+    // Empty catalog → show only the warning block; hide overview/toolbar/tree.
+    const emptyBlock = document.getElementById('catalog-empty-state')
+    if (emptyBlock) emptyBlock.style.display = isEmpty ? 'flex' : 'none'
+    const _toggle = (id, shown) => { const el = document.getElementById(id); if (el) el.style.display = isEmpty ? 'none' : shown }
+    _toggle('catalog-overview', 'grid')
+    _toggle('catalog-toolbar', 'flex')
+    _toggle('tree-controls', 'flex')
+    _toggle('catalog-tree', 'block')
+
+    if (isEmpty) { tree.innerHTML = ''; return }
+
+    let html = ''
+    let shownLayers = 0
+
+    categories.forEach((cat, ci) => {
+      const catId = 'cat-' + ci
+      const allEntries = cat.subcategories.flatMap(sc => sc.entries)
+      const visSubs = cat.subcategories.map((sc, si) => ({
+        sc, si, vis: sc.entries.filter(e => _matchEntry(e, cat.title, sc.title)),
+      })).filter(x => !searching || x.vis.length > 0)
+      if (searching && visSubs.length === 0) return
+
+      const catOpen = searching || expandAll || openGroups.has(catId)
+      const enabledEntries = allEntries.filter(e => e.enabled).length
+      const catIds = allEntries.map(e => e.id)
+      const catTarget = _nodeState(allEntries) !== 'on'
+
+      html += `<div class="dh-cat">
+        <div class="dh-row dh-cat-row" onclick="toggleCollapsible('${catId}')">
+          <span class="dh-chev${catOpen ? ' open' : ''}" id="arrow-${catId}">${_chev(17)}</span>
+          <span onclick="event.stopPropagation(); bulkToggleEntries(${JSON.stringify(catIds).replace(/"/g, '&quot;')}, ${catTarget})" title="${gettext('Check/uncheck all layers in this category')}">${_checkHtml(_nodeState(allEntries))}</span>
+          <span class="dh-cat-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
+          <span class="dh-name">${escapeHtml(cat.title)}</span>
+          <span class="dh-row-right">
+            ${_miniSegbar(allEntries)}
+            <span class="dh-count"><b>${enabledEntries}</b>/${allEntries.length} ${gettext('enabled')}</span>
+          </span>
+        </div>
+        <div class="dh-collapsible${catOpen ? ' open' : ''}" id="${catId}">`
+
+      visSubs.forEach(({ sc, si, vis }) => {
+        const subcatId = 'subcat-' + ci + '-' + si
+        const subOpen = searching || expandAll || openGroups.has(subcatId)
+        const scEnabled = sc.entries.filter(e => e.enabled).length
+        const scIds = sc.entries.map(e => e.id)
+        const scTarget = _nodeState(sc.entries) !== 'on'
+        const rows = searching ? vis : sc.entries
+
+        html += `<div class="dh-sub">
+          <div class="dh-row dh-sub-row" onclick="toggleCollapsible('${subcatId}')">
+            <span class="dh-chev${subOpen ? ' open' : ''}" id="arrow-${subcatId}">${_chev(16)}</span>
+            <span onclick="event.stopPropagation(); bulkToggleEntries(${JSON.stringify(scIds).replace(/"/g, '&quot;')}, ${scTarget})" title="${gettext('Check/uncheck all layers in this subcategory')}">${_checkHtml(_nodeState(sc.entries))}</span>
+            <span class="dh-name">${escapeHtml(sc.title)}</span>
+            <span class="dh-row-right"><span class="dh-count">${scEnabled}/${sc.entries.length}</span></span>
+          </div>
+          <div class="dh-collapsible${subOpen ? ' open' : ''}" id="${subcatId}"><div class="dh-layers">`
+
+        rows.forEach(entry => {
+          shownLayers++
+          const detailId = 'detail-' + entry.id
+          const isDetailOpen = openGroups.has(detailId)
+          const provider = entry.meta_source ? `<span class="dh-badge dh-badge-provider">${escapeHtml(entry.meta_source)}</span>` : ''
+          const type = `<span class="dh-badge dh-badge-type">${escapeHtml(entry.layer_type || 'wms')}</span>`
+          const origin = (entry.origin && entry.origin !== 'config') ? `<span class="dh-badge dh-badge-origin">${escapeHtml(entry.origin)}</span>` : ''
+          html += `<div class="dh-row dh-layer-row" onclick="toggleDetail('${entry.id}', event)">
+            <span onclick="event.stopPropagation(); toggleEntry('${entry.id}')" title="${gettext('Enable/disable this layer')}">${_checkHtml(entry.enabled ? 'on' : 'off')}</span>
+            <span class="dh-dot" style="background:${DH_STATUS_COLOR[entry.status] || 'var(--dh-st-disabled)'}" title="${escapeHtml(entry.status || '')}"></span>
+            <span class="dh-name">${escapeHtml(entry.title)}</span>
+            <span class="dh-row-right">
+              <span class="dh-layer-meta">${provider}${type}${origin}</span>
+              <span class="dh-chev${isDetailOpen ? ' open' : ''}" id="arrow-${detailId}">${_chev(16)}</span>
+            </span>
+          </div>
+          <div class="dh-collapsible${isDetailOpen ? ' open' : ''}" id="${detailId}">${buildDetailPanel(entry)}</div>`
+        })
+
+        html += `</div></div></div>`
+      })
+
+      html += `</div></div>`
+    })
+
+    if (searching && shownLayers === 0) {
+      html = `<div class="dh-empty"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg></div>${gettext('No layer matches your search.')}</div>`
+    }
+
+    tree.innerHTML = html
+  }
+
+  function buildWmsPreviewUrl(entry) {
+    const bbox = '-4554203.020722416,-4917533.4489256255,8081548.881484727,4906985.59447665'
+    let base = entry.wms_url
+    const sep = base.includes('?') ? '&' : '?'
+    return base + sep +
+      'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0' +
+      '&LAYERS=' + encodeURIComponent(entry.layer_name) +
+      '&CRS=EPSG:3857' +
+      '&BBOX=' + bbox +
+      '&WIDTH=256&HEIGHT=200' +
+      '&FORMAT=image/png' +
+      '&TRANSPARENT=true'
+  }
+
+  function buildDetailPanel(entry) {
+    const lt = entry.layer_type || 'wms'
+    const url = lt === 'wms' ? entry.wms_url
+      : (lt === 'raster_tile' || lt === 'vector_tile') ? entry.tile_url
+      : entry.file_url
+
+    const cell = (k, v, mono) => v
+      ? `<div class="dh-meta"><span class="k">${escapeHtml(k)}</span><span class="v${mono ? ' mono' : ''}">${escapeHtml(String(v))}</span></div>` : ''
+    const flag = (label, on) => {
+      const ic = on
+        ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+        : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+      return `<span class="dh-flag ${on ? 'on' : 'off'}">${ic}${escapeHtml(label)}</span>`
+    }
+
+    const urlCell = url
+      ? `<div class="dh-meta" style="grid-column:1/-1"><span class="k">${gettext('Service URL')}</span><span class="v mono" style="word-break:break-all;">${escapeHtml(url)}</span></div>` : ''
+    const autoUpd = entry.auto_update_interval ? entry.auto_update_interval + ' ' + gettext('min') : ''
+    const desc = entry.meta_overview || entry.summary || ''
+    const descCell = desc
+      ? `<div class="dh-meta" style="grid-column:1/-1"><span class="k">${gettext('Description')}</span><span class="v" style="font-weight:500;">${escapeHtml(desc)}</span></div>` : ''
+
+    const flags = `<div class="dh-meta" style="grid-column:1/-1"><span class="k">${gettext('Climweb options')}</span><div class="dh-flags">` +
+      flag(gettext('Popup'), !!entry.popup) +
+      flag(gettext('WMS legend'), !!entry.legend_from_capabilities) +
+      flag(gettext('Multi-temporal'), !!entry.multi_temporal) +
+      flag(gettext('Initially visible'), !!entry.initial_visible) +
+      flag(gettext('Near real-time'), !!entry.near_realtime) +
+      `</div></div>`
+
+    let thumb = `<div class="dh-thumb">${gettext('GetMap preview')}<br>320×240 · EPSG:3857</div>`
+    if (lt === 'wms' && entry.wms_url && entry.layer_name) {
+      const previewUrl = buildWmsPreviewUrl(entry)
+      thumb = `<div class="dh-thumb"><img src="${escapeHtml(previewUrl)}" alt="${gettext('GetMap preview')}" loading="lazy" onerror="this.parentNode.textContent='${gettext('Preview not available')}'"></div>`
+    }
+
+    return `<div class="dh-detail"><div class="dh-detail-card">
+      <div class="dh-meta-grid">
+        ${cell(gettext('Layer name'), entry.layer_name, true)}
+        ${cell(gettext('Type'), (entry.layer_type || 'wms'))}
+        ${urlCell}
+        ${cell(gettext('Provider'), entry.meta_source)}
+        ${cell(gettext('Resolution'), entry.meta_resolution)}
+        ${cell(gettext('Update freq.'), entry.meta_frequency_of_update)}
+        ${cell(gettext('Coverage'), entry.meta_geographic_coverage)}
+        ${cell(gettext('License'), entry.meta_license)}
+        ${cell(gettext('Origin'), entry.origin)}
+        ${autoUpd ? cell(gettext('Auto-update interval'), autoUpd) : ''}
+        ${descCell}
+        ${flags}
+      </div>
+      ${thumb}
+    </div></div>`
+  }
+
+  async function bulkToggleEntries(entryIds, enabled) {
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_bulk_toggle" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({ entry_ids: entryIds, enabled: enabled }),
+        credentials: 'include'
+      })
+      if (!response.ok) return
+      await loadCatalog()
+    } catch (error) {
+      console.error('Bulk toggle failed:', error)
+    }
+  }
+
+  function toggleDetail(entryId, event) {
+    // The custom checkbox stops propagation, so any click that reaches here is
+    // a row click → open / close the layer detail panel (and rotate its chevron).
+    toggleCollapsible('detail-' + entryId)
+  }
+
+  function toggleCollapsible(id) {
+    const el = document.getElementById(id)
+    const arrow = document.getElementById('arrow-' + id)
+    if (el) {
+      el.classList.toggle('open')
+      if (arrow) arrow.classList.toggle('open')
+      // Track state
+      if (el.classList.contains('open')) {
+        openGroups.add(id)
+      } else {
+        openGroups.delete(id)
+      }
+    }
+  }
+
+  function expandAllNodes() {
+    document.querySelectorAll('#catalog-tree .dh-collapsible').forEach(el => {
+      if (el.id.startsWith('detail-')) return   // categories & subcategories only
+      el.classList.add('open')
+      openGroups.add(el.id)
+      const arrow = document.getElementById('arrow-' + el.id)
+      if (arrow) arrow.classList.add('open')
+    })
+  }
+
+  function collapseAllNodes() {
+    document.querySelectorAll('#catalog-tree .dh-collapsible').forEach(el => {
+      if (el.id.startsWith('detail-')) return
+      el.classList.remove('open')
+      openGroups.delete(el.id)
+      const arrow = document.getElementById('arrow-' + el.id)
+      if (arrow) arrow.classList.remove('open')
+    })
+  }
+
+  async function toggleEntry(entryId) {
+    // Build URL relative to the catalog endpoint
+    const catalogUrl = '{% url "dataset_helper:catalog_tree" %}'
+    // catalogUrl = ".../catalog/" — append "<uuid>/toggle/"
+    const url = catalogUrl + entryId + '/toggle/'
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+      const text = await response.text()
+      console.log('Toggle response:', response.status, text.substring(0, 300))
+      if (!response.ok) {
+        return
+      }
+      // Reload full catalog to update counts and statuses
+      await loadCatalog()
+    } catch (error) {
+      console.error('Failed to toggle entry:', error)
+    }
+  }
+
+  async function resetCatalog() {
+    const total = (catalogData && catalogData.total) || 0
+    const synced = (catalogData && catalogData.synced) || 0
+    const confirmed = confirm(
+      gettext('Reset the entire catalog?') + '\n\n' +
+      interpolate(gettext('• %(count)s catalog entries will be deleted (config, manual, wms_import).'), {count: total}, true) + '\n' +
+      interpolate(gettext('• ~%(count)s Climweb Dataset(s) provisioned by the plugin will be removed.'), {count: synced}, true) + '\n' +
+      gettext('• Categories, SubCategories and Datasets not managed by the plugin are kept.') + '\n\n' +
+      gettext('This action cannot be undone.')
+    )
+    if (!confirmed) return
+
+    const resultsEl = document.getElementById('sync-results')
+    resultsEl.className = 'sync-results visible'
+    resultsEl.innerHTML = '<span class="loading-spinner" style="border-color: #dc2626; border-top-color: transparent;"></span> ' + gettext('Resetting...')
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:catalog_reset" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'include'
+      })
+      const data = await response.json()
+
+      if (data.status === 'success') {
+        resultsEl.className = 'sync-results visible success'
+        resultsEl.innerHTML = data.message
+      } else {
+        resultsEl.className = 'sync-results visible error'
+        resultsEl.innerHTML = data.message
+      }
+
+      await loadCatalog()
+    } catch (error) {
+      resultsEl.className = 'sync-results visible error'
+      resultsEl.innerHTML = gettext('Reset failed: ') + error.message
+    }
+  }
+
+  async function syncCatalog() {
+    const resultsEl = document.getElementById('sync-results')
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      resultsEl.className = 'sync-results visible'
+      resultsEl.innerHTML = '<span class="loading-spinner" style="border-color: #059669; border-top-color: transparent;"></span> ' + gettext('Syncing...')
+
+      const response = await fetch('{% url "dataset_helper:catalog_sync" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'include'
+      })
+      const data = await response.json()
+
+      if (data.status === 'success') {
+        resultsEl.className = 'sync-results visible success'
+        let msg = data.message
+        if (data.errors && data.errors.length > 0) {
+          msg += '<br><br><strong>' + gettext('Warnings:') + '</strong><ul style="margin:4px 0;">'
+          data.errors.forEach(e => msg += `<li style="font-size:12px;color:#dc2626;">${escapeHtml(e)}</li>`)
+          msg += '</ul>'
+        }
+        resultsEl.innerHTML = msg
+      } else {
+        resultsEl.className = 'sync-results visible error'
+        resultsEl.innerHTML = data.message
+      }
+
+      await loadCatalog()
+    } catch (error) {
+      resultsEl.className = 'sync-results visible error'
+      resultsEl.innerHTML = gettext('Sync failed: ') + error.message
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+  }
+
+  // Load catalog on page load — all collapsed
+  document.addEventListener('DOMContentLoaded', function() {
+    openGroups.clear()
+    loadCatalog(false)
+    // Apply the initial tab lock based on whether the mandatory settings exist.
+    if (typeof window.updateSettingsValidity === 'function') window.updateSettingsValidity()
+  })
+
+  // ───────────────────────── Admin Boundaries ─────────────────────────
+
+  let _boundaryStatus = null
+  let _boundaryMap = null
+  let _boundaryStatusLoaded = false
+
+  // Called every time the Admin Boundaries tab is shown. Loads status once,
+  // then (re)sizes the map (MapLibre needs a visible container to lay out).
+  function onBoundariesTabShown() {
+    if (!_boundaryStatusLoaded) {
+      _boundaryStatusLoaded = true
+      loadBoundariesStatus()
+    } else if (_boundaryMap) {
+      setTimeout(() => _boundaryMap.resize(), 50)
+    }
+  }
+
+  async function loadBoundariesStatus() {
+    try {
+      const r = await fetch('{% url "dataset_helper:boundaries_status" %}',
+        { headers: { 'Accept': 'application/json' } })
+      const data = await r.json()
+      _boundaryStatus = data
+      renderBoundariesStatus(data)
+    } catch (error) {
+      document.getElementById('boundary-levels').textContent =
+        gettext('Failed to load status') + ': ' + error.message
+    }
+  }
+
+  function renderBoundariesStatus(data) {
+    // Config summary
+    const country = data.country || {}
+    if (country.name || country.alpha3) {
+      document.getElementById('boundary-country').textContent =
+        (country.name || '') + (country.alpha3 ? ` (${country.alpha3})` : '')
+    }
+    document.getElementById('boundary-source').textContent =
+      (data.source_label && data.source_label.indexOf('OCHA') === 0) ? 'OCHA COD-AB' : (data.source_label || '-')
+    document.getElementById('boundary-total').textContent =
+      (typeof data.total_features === 'number') ? data.total_features.toLocaleString() : '-'
+
+    // Tiles URL
+    const tilesEl = document.getElementById('boundary-tiles-url')
+    if (tilesEl) tilesEl.textContent = data.tiles_url_template || ''
+
+    // Warnings / blockers
+    const warn = document.getElementById('boundary-warning')
+    const importBtn = document.getElementById('boundary-import-btn')
+    let warning = ''
+    if (!data.available) {
+      warning = gettext('The boundary manager is not available in this instance.') +
+        (data.error ? ' (' + escapeHtml(data.error) + ')' : '')
+    } else if (!country.alpha3) {
+      warning = gettext('No country configured. Set the country on the Settings tab first.')
+    }
+    if (warning) {
+      warn.style.display = 'block'
+      warn.innerHTML = warning
+      if (importBtn) importBtn.disabled = true
+    } else {
+      warn.style.display = 'none'
+      if (importBtn) importBtn.disabled = false
+    }
+
+    // Per-level table
+    const levelsEl = document.getElementById('boundary-levels')
+    const levels = data.levels || []
+    if (!levels.length) {
+      levelsEl.innerHTML = `<em>${gettext('No boundaries loaded yet for this country.')}</em>`
+    } else {
+      const rows = levels.map(l =>
+        `<tr><td>${gettext('Level')} ${l.level}</td><td>${(l.features || 0).toLocaleString()}</td></tr>`
+      ).join('')
+      levelsEl.innerHTML = `<table class="boundary-levels-table">
+        <thead><tr><th>${gettext('Admin level')}</th><th>${gettext('Features')}</th></tr></thead>
+        <tbody>${rows}</tbody></table>`
+    }
+
+    initBoundaryMap(data)
+  }
+
+  function initBoundaryMap(data) {
+    const container = document.getElementById('boundary-map')
+    if (!container) return
+    if (typeof maplibregl === 'undefined') {
+      container.innerHTML = `<div class="placeholder">${gettext('Map library could not be loaded.')}</div>`
+      return
+    }
+    if (_boundaryMap) { refreshBoundaryTiles(); return }
+
+    _boundaryMap = new maplibregl.Map({
+      container: 'boundary-map',
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors',
+          },
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+      },
+      center: [0, 0],
+      zoom: 1.5,
+    })
+    _boundaryMap.addControl(new maplibregl.NavigationControl(), 'top-right')
+    _boundaryMap.on('load', () => {
+      addBoundaryLayers()
+      fitBoundaryToCountry(data)
+    })
+  }
+
+  function boundaryTilesUrl(bust) {
+    const tpl = (_boundaryStatus && _boundaryStatus.tiles_url_template) ||
+      '/api/admin-boundary/tiles/{z}/{x}/{y}'
+    let url = window.location.origin + tpl
+    if (bust) url += (url.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now()
+    return url
+  }
+
+  function addBoundaryLayers(bust) {
+    if (!_boundaryMap) return
+    _boundaryMap.addSource('admin', {
+      type: 'vector',
+      tiles: [boundaryTilesUrl(bust)],
+      minzoom: 0,
+      maxzoom: 14,
+    })
+    // The boundary manager emits the MVT layer under the name 'default'.
+    _boundaryMap.addLayer({
+      id: 'admin-fill', type: 'fill', source: 'admin', 'source-layer': 'default',
+      paint: { 'fill-color': '#059669', 'fill-opacity': 0.12 },
+    })
+    _boundaryMap.addLayer({
+      id: 'admin-line', type: 'line', source: 'admin', 'source-layer': 'default',
+      paint: { 'line-color': '#047857', 'line-width': 0.8 },
+    })
+  }
+
+  // Re-load the vector source so freshly imported features appear.
+  function refreshBoundaryTiles() {
+    if (!_boundaryMap || !_boundaryMap.isStyleLoaded()) return
+    for (const id of ['admin-fill', 'admin-line']) {
+      if (_boundaryMap.getLayer(id)) _boundaryMap.removeLayer(id)
+    }
+    if (_boundaryMap.getSource('admin')) _boundaryMap.removeSource('admin')
+    addBoundaryLayers(true)
+  }
+
+  function fitBoundaryToCountry(data) {
+    const bbox = data && data.country && data.country.bbox
+    // PluginSettings stores bbox as [south, north, west, east].
+    if (!_boundaryMap || !Array.isArray(bbox) || bbox.length !== 4) return
+    const [south, north, west, east] = bbox
+    try {
+      _boundaryMap.fitBounds([[west, south], [east, north]], { padding: 24, duration: 0 })
+    } catch (e) { /* ignore invalid bbox */ }
+  }
+
+  async function importBoundaries() {
+    const btn = document.getElementById('boundary-import-btn')
+    const panel = document.getElementById('boundary-results')
+    const original = btn.innerHTML
+    btn.disabled = true
+    btn.innerHTML = '<span class="loading-spinner"></span>' + gettext('Importing…')
+    panel.classList.add('visible')
+    panel.classList.remove('success', 'error')
+    panel.innerHTML = `<p>${gettext('Downloading and loading boundaries — this can take a while…')}</p>`
+
+    try {
+      const r = await fetch('{% url "dataset_helper:boundaries_import" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        credentials: 'include',
+      })
+      const data = await r.json()
+      if (data.status === 'success') {
+        panel.classList.add('success')
+        const levelRows = (data.levels || []).map(l =>
+          l.status === 'ok'
+            ? `<li>${gettext('Level')} ${l.level}: <strong>${(l.features || 0).toLocaleString()}</strong> ${gettext('features')}</li>`
+            : `<li style="color:#dc2626;">${gettext('Level')} ${l.level}: ${escapeHtml(l.message || gettext('failed'))}</li>`
+        ).join('')
+        panel.innerHTML = `
+          <h4 style="color:#059669;margin-top:0;">${escapeHtml(data.message)}</h4>
+          <p style="font-size:12px;color:#6b7280;word-break:break-all;">${gettext('Source')}: ${escapeHtml(data.source_url || '')}</p>
+          <ul style="margin:8px 0 0 16px;">${levelRows}</ul>`
+        await loadBoundariesStatus()
+        refreshBoundaryTiles()
+      } else {
+        panel.classList.add('error')
+        panel.innerHTML = `<p style="color:#dc2626;">${gettext('Error')}: ${escapeHtml(data.message || gettext('Import failed'))}</p>`
+      }
+    } catch (error) {
+      panel.classList.add('visible', 'error')
+      panel.innerHTML = `<p style="color:#dc2626;">${gettext('Error')}: ${escapeHtml(error.message)}</p>`
+    }
+    btn.disabled = false
+    btn.innerHTML = original
+  }
+
+  async function clearBoundaries() {
+    if (!confirm(gettext('Delete all admin boundaries for the configured country?') + '\n\n' +
+        gettext('This action cannot be undone.'))) return
+    const panel = document.getElementById('boundary-results')
+    panel.classList.add('visible')
+    panel.classList.remove('success', 'error')
+    try {
+      const r = await fetch('{% url "dataset_helper:boundaries_clear" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        credentials: 'include',
+      })
+      const data = await r.json()
+      if (data.status === 'success') {
+        panel.classList.add('success')
+        panel.innerHTML = `<p style="color:#059669;">${escapeHtml(data.message)}</p>`
+        await loadBoundariesStatus()
+        refreshBoundaryTiles()
+      } else {
+        panel.classList.add('error')
+        panel.innerHTML = `<p style="color:#dc2626;">${gettext('Error')}: ${escapeHtml(data.message || gettext('Clear failed'))}</p>`
+      }
+    } catch (error) {
+      panel.classList.add('error')
+      panel.innerHTML = `<p style="color:#dc2626;">${gettext('Error')}: ${escapeHtml(error.message)}</p>`
+    }
+  }
+</script>
+
+
+{% endblock %}

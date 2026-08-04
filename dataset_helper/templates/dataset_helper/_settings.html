@@ -1,0 +1,419 @@
+{% load static i18n %}
+{% comment %}
+  Settings tab — self-contained partial (markup + styles + scripts).
+
+  Owns the plugin's global settings form (Country is mandatory), the
+  "required settings missing" notice, and the post-save "what's next?"
+  shortcuts to the Catalog and Boundaries tabs.
+
+  Relies on two helpers exposed by index.html: window.activateTab(tabId)
+  and window.setTabsLocked(locked). Exposes window.updateSettingsValidity()
+  and window.settingsValid so the host page can gate the other tabs.
+{% endcomment %}
+
+<style>
+    /* ── Settings tab ──────────────────────────────────────────────────── */
+    .settings-wrap { max-width: 880px; }
+    .settings-intro {
+        margin: 0 0 18px;
+        color: var(--dh-ink-2, #44464b);
+        font-size: 14px;
+        line-height: 1.6;
+        font-family: var(--dh-sans, sans-serif);
+    }
+
+    /* Required-settings notice (shown while a mandatory field is missing) */
+    .settings-required-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        border: 1px solid #f0cdc9;
+        border-left: 4px solid var(--dh-st-remove, #e0392b);
+        border-radius: var(--dh-r-md, 9px);
+        background: #fef2f2;
+        color: #991b1b;
+        font-size: 13.5px;
+        font-weight: 600;
+        font-family: var(--dh-sans, sans-serif);
+    }
+    .settings-required-note svg { flex: 0 0 auto; }
+
+    /* Settings card + form */
+    .settings-card { padding: 20px 22px; }
+    .dh-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 20px;
+        font-family: var(--dh-sans, sans-serif);
+    }
+    .dh-field { display: flex; flex-direction: column; gap: 6px; }
+    .dh-field label {
+        font-size: 12.5px; font-weight: 800; color: var(--dh-ink-2, #44464b);
+        display: flex; align-items: center; gap: 6px;
+    }
+    .dh-field .req { color: var(--dh-st-remove, #e0392b); }
+    .dh-field .hint {
+        font-size: 11.5px; color: var(--dh-ink-3, #6b6e76);
+        font-weight: 500; line-height: 1.4;
+    }
+    /* Scoped to .dh-field so the font-size wins over Wagtail's input[type=...]
+       admin rule (attribute selector would otherwise outrank a bare class),
+       keeping the text inputs the same size as the selects. */
+    .dh-field .dh-input, .dh-field .dh-select {
+        font-family: inherit; font-size: 13.5px; padding: 9px 11px;
+        border: 1px solid var(--dh-line, #e7e8ec); border-radius: var(--dh-r-sm, 6px);
+        background: var(--dh-surface, #fff); color: var(--dh-ink, #1b1b1f); width: 100%;
+    }
+    .dh-field .dh-input:focus, .dh-field .dh-select:focus {
+        outline: none; border-color: var(--dh-accent, #00a16c);
+        box-shadow: 0 0 0 3px var(--dh-accent-soft, #e4f4ee);
+    }
+    .settings-actions {
+        margin-top: 18px; display: flex; align-items: center; gap: 12px;
+    }
+    .settings-msg { font-size: 13px; transition: opacity 0.3s; }
+
+    /* "What's next?" shortcuts shown once the settings are valid */
+    .settings-next-steps { margin-top: 26px; }
+    .next-steps-title {
+        font-size: 15px; font-weight: 800; color: var(--dh-ink, #1b1b1f);
+        margin: 0 0 14px; font-family: var(--dh-sans, sans-serif);
+    }
+    .next-steps-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .next-step-card {
+        display: flex; align-items: center; gap: 14px; text-align: left;
+        padding: 16px 18px; cursor: pointer;
+        background: var(--dh-surface, #fff);
+        border: 1px solid var(--dh-line, #e7e8ec);
+        border-radius: var(--dh-r-lg, 14px);
+        box-shadow: var(--dh-shadow-1, 0 1px 2px rgba(20,22,30,.05));
+        transition: .14s; font-family: var(--dh-sans, sans-serif);
+    }
+    .next-step-card:hover {
+        border-color: var(--dh-accent, #00a16c);
+        box-shadow: 0 4px 14px rgba(0,161,108,.16);
+        transform: translateY(-1px);
+    }
+    .next-step-ic {
+        width: 42px; height: 42px; flex: 0 0 auto; border-radius: 11px;
+        display: grid; place-items: center;
+        background: var(--dh-accent-soft, #e4f4ee); color: var(--dh-accent-ink, #007a52);
+    }
+    .next-step-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .next-step-label { font-size: 14px; font-weight: 800; color: var(--dh-ink, #1b1b1f); }
+    .next-step-sub { font-size: 12px; color: var(--dh-ink-3, #6b6e76); line-height: 1.4; }
+    .next-step-arrow { color: var(--dh-ink-4, #9a9da6); flex: 0 0 auto; }
+    .next-step-card:hover .next-step-arrow { color: var(--dh-accent, #00a16c); }
+
+    @media (max-width: 920px) {
+        .dh-form, .next-steps-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div id="settings" class="tab-content{% if not settings_valid %} active{% endif %}">
+    <div class="settings-wrap">
+        <p class="settings-intro">
+            {% trans "Configure the plugin for this Climweb instance. The Country is required — the Catalog and Boundaries tabs stay locked until it is set." %}
+        </p>
+
+        <!-- Shown while a mandatory setting is missing -->
+        <div id="settings-required-note" class="settings-required-note"{% if settings_valid %} style="display:none;"{% endif %}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+            {% trans "Complete the required settings below to unlock the other tabs." %}
+        </div>
+
+        <div class="dh-card settings-card">
+            <div class="dh-form">
+                <div class="dh-field">
+                    <label for="setting-country">{% trans "Country" %} <span class="req">*</span></label>
+                    <select id="setting-country" class="dh-select" required data-current-alpha3="{{ plugin_settings.country_alpha3|default:'' }}" disabled>
+                        <option value="">— {% trans "Loading countries…" %} —</option>
+                    </select>
+                    <span class="hint" id="country-bbox-hint">{% blocktrans %}Required. Saves ISO codes (placeholders <code>{country_alpha3}</code> / <code>{country_alpha2}</code>), the official country name and the bounding box from OpenStreetMap Nominatim.{% endblocktrans %}</span>
+                    {{ plugin_settings.country_bbox|json_script:"current-country-bbox" }}
+                    {{ plugin_settings.country_name|json_script:"current-country-name" }}
+                </div>
+                <div class="dh-field">
+                    <label for="setting-language">{% trans "Import language" %}</label>
+                    <select id="setting-language" class="dh-select">
+                        <option value="en" {% if plugin_settings.language == 'en' %}selected{% endif %}>English</option>
+                        <option value="fr" {% if plugin_settings.language == 'fr' %}selected{% endif %}>Français</option>
+                        <option value="es" {% if plugin_settings.language == 'es' %}selected{% endif %}>Español</option>
+                        <option value="pt" {% if plugin_settings.language == 'pt' %}selected{% endif %}>Português</option>
+                        <option value="ar" {% if plugin_settings.language == 'ar' %}selected{% endif %}>العربية</option>
+                    </select>
+                    <span class="hint">{% trans "Language for imported catalog labels" %}</span>
+                </div>
+                <div class="dh-field">
+                    <label for="setting-ecmwf-token">{% trans "ECMWF Token" %}</label>
+                    <input type="text" id="setting-ecmwf-token" class="dh-input" value="{{ plugin_settings.ecmwf_token }}" placeholder="{% trans '(leave empty for public-only)' %}">
+                    <span class="hint">{% trans "Token for eccharts.ecmwf.int. Empty = public layers only; private layers (token={ECMWF_TOKEN}) are skipped." %}</span>
+                </div>
+                <div class="dh-field">
+                    <label for="setting-estation-url">{% trans "Local eStation URL" %}</label>
+                    <input type="url" id="setting-estation-url" class="dh-input" value="{{ plugin_settings.estation_url }}" placeholder="https://burkina.puma2025.com/http/c000/w04/climsa/mobile-app">
+                    <span class="hint">{% trans "Leave empty to import all eStation products" %}</span>
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button class="dh-btn dh-btn-primary dh-btn-md" onclick="saveSettings()">{% trans "Save Settings" %}</button>
+                <span id="settings-msg" class="settings-msg"></span>
+            </div>
+        </div>
+
+        <!-- Post-save shortcuts — revealed once the settings are valid -->
+        <div id="settings-next-steps" class="settings-next-steps"{% if not settings_valid %} style="display:none;"{% endif %}>
+            <h3 class="next-steps-title">{% trans "Settings saved. What would you like to configure next?" %}</h3>
+            <div class="next-steps-grid">
+                <button type="button" class="next-step-card" onclick="window.activateTab('catalog')">
+                    <span class="next-step-ic">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+                    </span>
+                    <span class="next-step-text">
+                        <span class="next-step-label">{% trans "Configure the catalog" %}</span>
+                        <span class="next-step-sub">{% trans "Load, review and synchronize the layer catalog with Climweb." %}</span>
+                    </span>
+                    <span class="next-step-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </span>
+                </button>
+                <button type="button" class="next-step-card" onclick="window.activateTab('admin-boundaries')">
+                    <span class="next-step-ic">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6 9 3l6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>
+                    </span>
+                    <span class="next-step-text">
+                        <span class="next-step-label">{% trans "Configure the boundaries" %}</span>
+                        <span class="next-step-sub">{% trans "Import the administrative boundaries for your country." %}</span>
+                    </span>
+                    <span class="next-step-arrow">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  // ── Settings tab logic ─────────────────────────────────────────────────────
+  // i18n / cookie helpers are defined in index.html and available globally.
+
+  // Single source of truth for whether the mandatory settings are filled in.
+  // Drives the tab lock (other tabs), the "required" notice and the next-steps
+  // shortcuts. Re-run on load, after the country list builds, and after save.
+  function updateSettingsValidity() {
+    const select = document.getElementById('setting-country')
+    if (!select) return
+    const currentAlpha3 = (select.dataset.currentAlpha3 || '').trim()
+    const isValid = currentAlpha3.length === 3
+    window.settingsValid = isValid
+
+    // Lock/unlock the other tabs (helper lives in index.html).
+    if (typeof window.setTabsLocked === 'function') window.setTabsLocked(!isValid)
+
+    const note = document.getElementById('settings-required-note')
+    if (note) note.style.display = isValid ? 'none' : ''
+
+    const next = document.getElementById('settings-next-steps')
+    if (next) next.style.display = isValid ? '' : 'none'
+
+    // Keep the catalog's "Load embedded catalog" button gated too.
+    const loadBtn = document.getElementById('load-catalog-btn')
+    if (loadBtn) {
+      loadBtn.disabled = !isValid
+      loadBtn.title = isValid ? '' : gettext('Complete the required settings first')
+    }
+  }
+  window.updateSettingsValidity = updateSettingsValidity
+
+  async function saveSettings() {
+    const countrySelect = document.getElementById('setting-country')
+    const msgEl = document.getElementById('settings-msg')
+    const alpha3 = (countrySelect.value || '').toLowerCase()
+    const opt = countrySelect.options[countrySelect.selectedIndex]
+    const alpha2 = opt && opt.dataset && opt.dataset.alpha2
+
+    if (!alpha3 || !alpha2) {
+      msgEl.textContent = gettext('Please pick a country before saving')
+      msgEl.style.color = '#dc2626'
+      countrySelect.focus()
+      return
+    }
+
+    // Ensure we have a bbox + country name; fetch if missing.
+    if ((!window._countryBbox || !window._countryName) && window._fetchCountryInfo) {
+      msgEl.textContent = gettext('Fetching country info…')
+      msgEl.style.color = '#6b7280'
+      try {
+        const info = await window._fetchCountryInfo(alpha2)
+        window._countryBbox = info.bbox
+        window._countryName = info.name
+        if (window._renderCountryHint) window._renderCountryHint()
+      } catch (err) {
+        msgEl.textContent = gettext('Could not fetch country info: ') + err.message
+        msgEl.style.color = '#dc2626'
+        return
+      }
+    }
+
+    const data = {
+      language: document.getElementById('setting-language').value,
+      ecmwf_token: document.getElementById('setting-ecmwf-token').value.trim(),
+      estation_url: document.getElementById('setting-estation-url').value.trim(),
+      country_alpha3: alpha3,
+      country_alpha2: alpha2,
+      country_name: window._countryName || '',
+      country_bbox: window._countryBbox,
+    }
+
+    msgEl.textContent = gettext('Saving...')
+    msgEl.style.color = '#6b7280'
+
+    try {
+      const csrftoken = getCookie('csrftoken')
+      const response = await fetch('{% url "dataset_helper:settings_save" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      })
+      const result = await response.json()
+
+      if (result.status === 'success') {
+        msgEl.textContent = gettext('Settings saved')
+        msgEl.style.color = '#059669'
+        countrySelect.dataset.currentAlpha3 = alpha3
+        // Unlocks the other tabs and reveals the next-steps shortcuts.
+        updateSettingsValidity()
+      } else {
+        msgEl.textContent = gettext('Error') + ': ' + result.message
+        msgEl.style.color = '#dc2626'
+      }
+    } catch (error) {
+      msgEl.textContent = gettext('Error') + ': ' + error.message
+      msgEl.style.color = '#dc2626'
+    }
+
+    setTimeout(() => { msgEl.textContent = '' }, 3000)
+  }
+</script>
+
+<script type="module">
+// Country picker — populated via i18n-iso-countries (jsdelivr ESM) in the configured language.
+const select = document.getElementById('setting-country')
+const hint = document.getElementById('country-bbox-hint')
+const requestedLang = '{{ plugin_settings.language|default:"en" }}'
+
+window._countryBbox = (() => {
+  try { return JSON.parse(document.getElementById('current-country-bbox').textContent) }
+  catch (_) { return null }
+})()
+window._countryName = (() => {
+  try { return JSON.parse(document.getElementById('current-country-name').textContent) || '' }
+  catch (_) { return '' }
+})()
+
+function renderHint(extra) {
+  const bb = window._countryBbox
+  const bbStr = bb && bb.length === 4
+    ? `[S ${bb[0]}, N ${bb[1]}, W ${bb[2]}, E ${bb[3]}]`
+    : window.gettext ? window.gettext('none') : 'none'
+  const nameStr = window._countryName ? ` "${window._countryName}"` : ''
+  const _ = window.gettext || (s => s)
+  hint.textContent = `${_('Country')}${nameStr} — ${_('Bounding box:')} ${bbStr}${extra ? ' — ' + extra : ''}`
+}
+
+const _t = window.gettext || (s => s)
+
+async function loadLocale(lang) {
+  try {
+    const mod = await import(`https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.7.0/langs/${lang}.json/+esm`)
+    return [lang, mod.default || mod]
+  } catch (_) {
+    if (lang === 'en') throw new Error(_t('Failed to load English locale'))
+    const en = await import('https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.7.0/langs/en.json/+esm')
+    return ['en', en.default || en]
+  }
+}
+
+(async () => {
+  try {
+    const countriesMod = await import('https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.7.0/+esm')
+    const countries = countriesMod.default || countriesMod
+    const [lang, locale] = await loadLocale(requestedLang)
+    countries.registerLocale(locale)
+
+    const names = countries.getNames(lang, { select: 'official' })
+    const collator = new Intl.Collator(lang)
+    const sortedAlpha2 = Object.keys(names).sort((a, b) => collator.compare(names[a], names[b]))
+    const currentAlpha3 = (select.dataset.currentAlpha3 || '').toUpperCase()
+
+    const opts = [`<option value="">— ${_t('Select a country')} —</option>`]
+    for (const a2 of sortedAlpha2) {
+      const a3 = countries.alpha2ToAlpha3(a2)
+      if (!a3) continue
+      const selected = a3 === currentAlpha3 ? ' selected' : ''
+      opts.push(`<option value="${a3.toLowerCase()}" data-alpha2="${a2.toLowerCase()}"${selected}>${names[a2]}</option>`)
+    }
+    select.innerHTML = opts.join('')
+    select.disabled = false
+    renderHint()
+  } catch (err) {
+    select.innerHTML = `<option value="">— ${_t('Failed to load countries')} —</option>`
+    renderHint(_t('Could not load country list') + ' (' + err.message + ')')
+  }
+})()
+
+if (typeof window.updateSettingsValidity === 'function') {
+  window.updateSettingsValidity()
+}
+
+async function fetchCountryInfo(alpha2) {
+  const r = await fetch(
+    `https://nominatim.openstreetmap.org/search?country=${alpha2}&featuretype=country&format=json&limit=1`,
+    { headers: { 'Accept': 'application/json' } }
+  )
+  if (!r.ok) throw new Error('HTTP ' + r.status)
+  const data = await r.json()
+  const first = data && data[0]
+  if (!first) throw new Error('No country result returned')
+  const bbox = first.boundingbox
+  if (!bbox || bbox.length !== 4) throw new Error('No bounding box returned')
+  return {
+    bbox: bbox.map(parseFloat),
+    name: first.display_name || first.name || '',
+  }
+}
+
+window._fetchCountryInfo = fetchCountryInfo
+window._renderCountryHint = renderHint
+
+select.addEventListener('change', async () => {
+  const opt = select.options[select.selectedIndex]
+  const alpha2 = opt && opt.dataset.alpha2
+  if (!alpha2) {
+    window._countryBbox = null
+    window._countryName = ''
+    renderHint()
+    return
+  }
+  renderHint(_t('Fetching country info…'))
+  try {
+    const info = await fetchCountryInfo(alpha2)
+    window._countryBbox = info.bbox
+    window._countryName = info.name
+    renderHint()
+  } catch (err) {
+    window._countryBbox = null
+    window._countryName = ''
+    renderHint(_t('Failed to fetch country info:') + ' ' + err.message)
+  }
+})
+</script>

@@ -1,0 +1,585 @@
+# French translations for the dataset_helper JS catalog.
+# Copyright (C) 2026
+# This file is distributed under the same license as the dataset_helper package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: dataset-helper-plugin 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-20 12:00+0000\n"
+"PO-Revision-Date: 2026-05-20 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# ── Clear provisioned ────────────────────────────────────────────────────────
+
+msgid "Delete all Climweb Datasets that this plugin provisioned?"
+msgstr "Supprimer tous les Datasets Climweb provisionnés par ce plugin ?"
+
+msgid "Datasets created outside the plugin will be kept."
+msgstr "Les Datasets créés en dehors du plugin seront conservés."
+
+msgid "Catalog entries will be reset to pending_add."
+msgstr "Les entrées du catalogue repasseront en pending_add."
+
+msgid "This action cannot be undone."
+msgstr "Cette action est irréversible."
+
+msgid "Clearing…"
+msgstr "Suppression…"
+
+msgid "Catalog datasets cleared"
+msgstr "Datasets du catalogue supprimés"
+
+msgid "Datasets Deleted"
+msgstr "Datasets supprimés"
+
+msgid "Metadata Deleted"
+msgstr "Métadonnées supprimées"
+
+msgid "Empty SubCategories Swept"
+msgstr "Sous-catégories vides nettoyées"
+
+msgid "Empty Categories Swept"
+msgstr "Catégories vides nettoyées"
+
+msgid "Catalog Entries Reset"
+msgstr "Entrées du catalogue réinitialisées"
+
+msgid ""
+"Datasets, SubCategories and Categories that did not come from this plugin "
+"were preserved."
+msgstr ""
+"Les Datasets, sous-catégories et catégories non gérés par ce plugin ont été "
+"conservés."
+
+msgid "Refresh the page"
+msgstr "Rafraîchir la page"
+
+msgid "to see the updated state."
+msgstr "pour voir l’état mis à jour."
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Clear failed"
+msgstr "Échec de la suppression"
+
+# ── Clear all ────────────────────────────────────────────────────────────────
+
+msgid "Are you sure you want to delete ALL datasets, subcategories, and categories?"
+msgstr "Êtes-vous sûr de vouloir supprimer TOUS les datasets, sous-catégories et catégories ?"
+
+msgid "This action CANNOT be undone!"
+msgstr "Cette action est IRRÉVERSIBLE !"
+
+msgid "This is your LAST CHANCE to cancel."
+msgstr "Dernière chance d’annuler."
+
+msgid "Click OK to permanently delete all data, or Cancel to abort."
+msgstr "Cliquez sur OK pour tout supprimer définitivement, ou Annuler pour interrompre."
+
+msgid "Clearing..."
+msgstr "Suppression…"
+
+msgid "%(count)s item(s) could not be deleted:"
+msgstr "%(count)s élément(s) n’ont pas pu être supprimés :"
+
+msgid "Completed with some errors"
+msgstr "Terminé avec quelques erreurs"
+
+msgid "All data cleared successfully!"
+msgstr "Toutes les données ont été supprimées avec succès !"
+
+msgid "Categories Deleted"
+msgstr "Catégories supprimées"
+
+msgid "Subcategories Deleted"
+msgstr "Sous-catégories supprimées"
+
+msgid "WMS Layers Deleted"
+msgstr "Couches WMS supprimées"
+
+msgid "Clear All Datasets & Categories"
+msgstr "Supprimer tous les Datasets & Catégories"
+
+# ── Settings / country ───────────────────────────────────────────────────────
+
+msgid "Set the required Country setting first"
+msgstr "Renseignez d’abord le paramètre Pays obligatoire"
+
+msgid "Please pick a country before saving"
+msgstr "Sélectionnez un pays avant d’enregistrer"
+
+msgid "Fetching country info…"
+msgstr "Récupération des informations pays…"
+
+msgid "Could not fetch country info: "
+msgstr "Impossible de récupérer les informations pays : "
+
+msgid "Saving..."
+msgstr "Enregistrement…"
+
+msgid "Settings saved"
+msgstr "Paramètres enregistrés"
+
+msgid "Select a country"
+msgstr "Sélectionner un pays"
+
+msgid "Failed to load English locale"
+msgstr "Échec du chargement de la locale anglaise"
+
+msgid "Failed to load countries"
+msgstr "Échec du chargement des pays"
+
+msgid "Could not load country list"
+msgstr "Impossible de charger la liste des pays"
+
+msgid "none"
+msgstr "aucune"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Bounding box:"
+msgstr "Bounding box :"
+
+msgid "Failed to fetch country info:"
+msgstr "Échec de la récupération des informations pays :"
+
+# ── Catalog preview / apply ──────────────────────────────────────────────────
+
+msgid "(no version)"
+msgstr "(aucune version)"
+
+msgid "Review catalog update — %(from)s → %(to)s"
+msgstr "Revue de la mise à jour du catalogue — %(from)s → %(to)s"
+
+msgid "Nothing has been written yet. Pick an apply mode or cancel."
+msgstr "Rien n’a encore été écrit. Choisissez un mode d’application ou annulez."
+
+msgid "new"
+msgstr "nouveau"
+
+msgid "updated"
+msgstr "mis à jour"
+
+msgid "local drift"
+msgstr "modifications locales"
+
+msgid "conflict"
+msgstr "conflit"
+
+msgid "conflicts"
+msgstr "conflits"
+
+msgid "to remove"
+msgstr "à supprimer"
+
+msgid "unchanged"
+msgstr "inchangé"
+
+msgid "Conflicts (catalog changed AND Wagtail edited)"
+msgstr "Conflits (catalogue modifié ET édité dans Wagtail)"
+
+msgid "New entries to add"
+msgstr "Nouvelles entrées à ajouter"
+
+msgid "Clean updates (catalog moved, no local edits)"
+msgstr "Mises à jour propres (catalogue modifié, sans édition locale)"
+
+msgid "Local drift (Wagtail-edited, catalog unchanged)"
+msgstr "Modifications locales (édité dans Wagtail, catalogue inchangé)"
+
+msgid "To remove (gone from catalog source)"
+msgstr "À supprimer (absent du catalogue source)"
+
+msgid "Errors"
+msgstr "Erreurs"
+
+msgid "Nothing to apply — catalog and database are in sync."
+msgstr "Rien à appliquer — le catalogue et la base sont synchronisés."
+
+msgid "Apply — keep %(count)s local edit"
+msgstr "Appliquer — conserver %(count)s édition locale"
+
+msgid "Apply — keep %(count)s local edits"
+msgstr "Appliquer — conserver %(count)s éditions locales"
+
+msgid "Apply changes"
+msgstr "Appliquer les changements"
+
+msgid "Apply — overwrite %(count)s conflict"
+msgstr "Appliquer — écraser %(count)s conflit"
+
+msgid "Apply — overwrite %(count)s conflicts"
+msgstr "Appliquer — écraser %(count)s conflits"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Computing changeset…"
+msgstr "Calcul des changements…"
+
+msgid "Preview failed"
+msgstr "Échec de la prévisualisation"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Preview failed:"
+msgstr "Échec de la prévisualisation :"
+
+msgid "Applying changes (%(policy)s)…"
+msgstr "Application des changements (%(policy)s)…"
+
+msgid "Catalog loaded"
+msgstr "Catalogue chargé"
+
+msgid "Apply failed"
+msgstr "Échec de l’application"
+
+msgid "Apply failed: "
+msgstr "Échec de l’application : "
+
+# ── Catalog banner ───────────────────────────────────────────────────────────
+
+msgid "No catalog loaded yet. Bundled catalog: <strong>v%(version)s</strong>."
+msgstr "Aucun catalogue chargé. Catalogue embarqué : <strong>v%(version)s</strong>."
+
+msgid "Review changes"
+msgstr "Revoir les changements"
+
+msgid "A catalog update is available: <strong>v%(from)s</strong> → <strong>v%(to)s</strong>. "
+msgstr "Une mise à jour du catalogue est disponible : <strong>v%(from)s</strong> → <strong>v%(to)s</strong>. "
+
+msgid "Review the changeset before applying — entries you edited in Wagtail can be kept."
+msgstr "Revoyez les changements avant d’appliquer — les entrées éditées dans Wagtail peuvent être conservées."
+
+msgid "Catalog <strong>v%(version)s</strong> · loaded %(date)s"
+msgstr "Catalogue <strong>v%(version)s</strong> · chargé le %(date)s"
+
+msgid "Catalog <strong>v%(version)s</strong> loaded"
+msgstr "Catalogue <strong>v%(version)s</strong> chargé"
+
+# ── Catalog tree ─────────────────────────────────────────────────────────────
+
+msgid "Catalog is empty"
+msgstr "Catalogue vide"
+
+msgid "Load a JSON config or add layers manually to get started."
+msgstr "Chargez une configuration JSON ou ajoutez des couches manuellement pour commencer."
+
+msgid "Check/uncheck all layers in this category"
+msgstr "Cocher/décocher toutes les couches de cette catégorie"
+
+msgid "%(enabled)s/%(total)s enabled"
+msgstr "%(enabled)s/%(total)s activées"
+
+msgid "Check/uncheck all layers in this subcategory"
+msgstr "Cocher/décocher toutes les couches de cette sous-catégorie"
+
+msgid "Enable/disable this layer"
+msgstr "Activer/désactiver cette couche"
+
+# ── Entry detail panel ───────────────────────────────────────────────────────
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Layer name"
+msgstr "Nom de la couche"
+
+msgid "WMS URL"
+msgstr "URL WMS"
+
+msgid "Tile URL"
+msgstr "URL des tuiles"
+
+msgid "File URL"
+msgstr "URL du fichier"
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Function"
+msgstr "Fonction"
+
+msgid "Resolution"
+msgstr "Résolution"
+
+msgid "Coverage"
+msgstr "Couverture"
+
+msgid "Update freq."
+msgstr "Fréq. de mise à jour"
+
+msgid "License"
+msgstr "Licence"
+
+msgid "Multi-temporal"
+msgstr "Multi-temporel"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Origin"
+msgstr "Origine"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Learn more"
+msgstr "En savoir plus"
+
+msgid "WMS Preview"
+msgstr "Aperçu WMS"
+
+msgid "Preview not available"
+msgstr "Aperçu non disponible"
+
+msgid "WMS preview"
+msgstr "Aperçu WMS"
+
+# ── Reset / sync ─────────────────────────────────────────────────────────────
+
+msgid "Reset the entire catalog?"
+msgstr "Réinitialiser tout le catalogue ?"
+
+msgid "• %(count)s catalog entries will be deleted (config, manual, wms_import)."
+msgstr "• %(count)s entrées du catalogue seront supprimées (config, manuel, wms_import)."
+
+msgid "• ~%(count)s Climweb Dataset(s) provisioned by the plugin will be removed."
+msgstr "• ~%(count)s Dataset(s) Climweb provisionnés par le plugin seront supprimés."
+
+msgid "• Categories, SubCategories and Datasets not managed by the plugin are kept."
+msgstr "• Les catégories, sous-catégories et Datasets non gérés par le plugin sont conservés."
+
+msgid "Resetting..."
+msgstr "Réinitialisation…"
+
+msgid "Reset failed: "
+msgstr "Échec de la réinitialisation : "
+
+msgid "Syncing..."
+msgstr "Synchronisation…"
+
+msgid "Warnings:"
+msgstr "Avertissements :"
+
+msgid "Sync failed: "
+msgstr "Échec de la synchronisation : "
+
+# ── Add layer / WMS import ───────────────────────────────────────────────────
+
+msgid "Please fill in all required fields (*)."
+msgstr "Veuillez remplir tous les champs obligatoires (*)."
+
+msgid "Please enter a WMS URL."
+msgstr "Veuillez saisir une URL WMS."
+
+msgid "Fetching..."
+msgstr "Récupération…"
+
+msgid "%(count)s layers from %(url)s"
+msgstr "%(count)s couches depuis %(url)s"
+
+msgid "Failed to fetch capabilities: "
+msgstr "Échec de la récupération des capabilities : "
+
+msgid "Fetch Layers"
+msgstr "Récupérer les couches"
+
+msgid "No layers found"
+msgstr "Aucune couche trouvée"
+
+msgid "Please fill in Category and Subcategory."
+msgstr "Veuillez renseigner Catégorie et Sous-catégorie."
+
+msgid "Added \"%(name)s\" to catalog."
+msgstr "« %(name)s » ajouté au catalogue."
+
+msgid "Configure selected layer"
+msgstr "Configurer la couche sélectionnée"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Category"
+msgstr "Catégorie"
+
+msgid "e.g. Environment"
+msgstr "ex. Environnement"
+
+msgid "Subcategory"
+msgstr "Sous-catégorie"
+
+msgid "e.g. Observation"
+msgstr "ex. Observation"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Add to Catalog"
+msgstr "Ajouter au catalogue"
+
+msgid "Back to list"
+msgstr "Retour à la liste"
+
+# ── Load config ──────────────────────────────────────────────────────────────
+
+msgid "Invalid JSON: "
+msgstr "JSON invalide : "
+
+msgid "Loading config..."
+msgstr "Chargement de la configuration…"
+
+msgid "Load failed: "
+msgstr "Échec du chargement : "
+
+# ── Admin Boundaries ─────────────────────────────────────────────────────────
+
+msgid "Failed to load status"
+msgstr "Échec du chargement du statut"
+
+msgid "The boundary manager is not available in this instance."
+msgstr "Le boundary manager n’est pas disponible sur cette instance."
+
+msgid "No country configured. Set the country on the Settings tab first."
+msgstr "Aucun pays configuré. Renseignez d’abord le pays dans l’onglet Paramètres."
+
+msgid "No boundaries loaded yet for this country."
+msgstr "Aucune limite chargée pour ce pays pour l’instant."
+
+msgid "Level"
+msgstr "Niveau"
+
+msgid "Admin level"
+msgstr "Niveau administratif"
+
+msgid "Features"
+msgstr "Entités"
+
+msgid "Map library could not be loaded."
+msgstr "La bibliothèque cartographique n’a pas pu être chargée."
+
+msgid "Importing…"
+msgstr "Import en cours…"
+
+msgid "Downloading and loading boundaries — this can take a while…"
+msgstr "Téléchargement et chargement des limites — cela peut prendre un moment…"
+
+msgid "features"
+msgstr "entités"
+
+msgid "failed"
+msgstr "échec"
+
+msgid "Import failed"
+msgstr "Échec de l’import"
+
+msgid "Delete all admin boundaries for the configured country?"
+msgstr "Supprimer toutes les limites administratives du pays configuré ?"
+
+# ── Settings tab gating ──
+
+msgid "Complete the required settings first"
+msgstr "Complétez d’abord les réglages obligatoires"
+
+# ── Added: catalog redesign (JS) ──
+
+msgid "%(n)s to create"
+msgstr "%(n)s à créer"
+
+msgid "%(n)s to remove"
+msgstr "%(n)s à retirer"
+
+msgid "%(n)s to update"
+msgstr "%(n)s à mettre à jour"
+
+msgid "Auto-update interval"
+msgstr "Intervalle de mise à jour auto"
+
+msgid "Catalog <b>v%(v)s</b>"
+msgstr "Catalogue <b>v%(v)s</b>"
+
+msgid "Catalog out of sync with Climweb"
+msgstr "Catalogue désynchronisé avec Climweb"
+
+msgid "Disabled"
+msgstr "Désactivées"
+
+msgid "Initially visible"
+msgstr "Visible au départ"
+
+msgid "Load failed"
+msgstr "Échec du chargement"
+
+msgid "Loading catalog…"
+msgstr "Chargement du catalogue…"
+
+msgid "Near real-time"
+msgstr "Temps quasi réel"
+
+msgid "Synced"
+msgstr "Synchronisées"
+
+msgid "Synchronize with Climweb"
+msgstr "Synchroniser avec Climweb"
+
+msgid "To add"
+msgstr "À ajouter"
+
+msgid "To remove"
+msgstr "À retirer"
+
+msgid "loaded %(d)s"
+msgstr "chargé le %(d)s"
+
+msgid "min"
+msgstr "min"
+
+msgid "not loaded"
+msgstr "non chargé"
+
+msgid "removed"
+msgstr "retraits"
+
+msgid "%(n)s pending change"
+msgid_plural "%(n)s pending changes"
+msgstr[0] "%(n)s changement en attente"
+msgstr[1] "%(n)s changements en attente"
+
+# ── Added: layer tree controls/detail ──
+
+msgid "Climweb options"
+msgstr "Options Climweb"
+
+msgid "GetMap preview"
+msgstr "Aperçu GetMap"
+
+msgid "No layer matches your search."
+msgstr "Aucune couche ne correspond à votre recherche."
+
+msgid "Popup"
+msgstr "Popup"
+
+msgid "Provider"
+msgstr "Fournisseur"
+
+msgid "Service URL"
+msgstr "URL du service"
+
+msgid "WMS legend"
+msgstr "Légende WMS"
+
+msgid "enabled"
+msgstr "activées"
