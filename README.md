@@ -105,6 +105,39 @@ Two client-side names changed:
 `build.sh`, `uninstall.sh`, `Makefile` and `climweb_plugin_info.json` are gone — pip
 handles all of it.
 
+## Sandbox
+
+`sandbox/` is a minimal Wagtail project running GeoManager and Dataset Helper on their
+own, so you can exercise the app without standing up a full ClimWeb instance.
+
+```shell
+cd sandbox
+docker compose up --build
+```
+
+Then open <http://localhost:8000/admin/geomanager/dataset_helper/> and log in with
+`admin` / `admin` (created on first start; change it in `sandbox/.env`).
+
+The compose file builds from the repo root and installs the package with `-e ..`, and
+bind-mounts `dataset_helper/` into the container — edits to the app are picked up by the
+dev server without a rebuild. Postgres is exposed on **5433** so it won't collide with a
+local ClimWeb database.
+
+Unlike forecastmanager's sandbox this one cannot use SQLite: GeoManager stores geometry,
+and migrations `0006`/`0023` contain raw PostgreSQL. The compose file provides
+`postgis/postgis:15-3.3`, and the image is built from the same GDAL base ClimWeb uses.
+
+To run it without Docker, point `DATABASE_URL` at your own PostGIS database:
+
+```shell
+cd sandbox
+pip install -r requirements.txt
+export DATABASE_URL=postgis://postgres:postgres@localhost:5432/dataset_helper
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
 ## Development
 
 ```shell

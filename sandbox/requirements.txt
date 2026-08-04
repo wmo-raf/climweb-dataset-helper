@@ -1,0 +1,22 @@
+# The app under test, installed from the repo root in editable mode so changes to
+# dataset_helper/ take effect without a reinstall.
+-e ..
+
+# Pinned to the versions ClimWeb runs, so the sandbox reproduces production.
+geomanager==0.6.4
+wagtail==7.3.2
+django==5.2.14
+adm-boundary-manager==0.3.0
+dj-database-url==2.3.0
+psycopg2-binary>=2.9.6
+gunicorn==23.0.0
+
+# geomanager imports these at module load but does not declare them in its own
+# install_requires, so `pip install geomanager` alone leaves an unbootable project:
+#
+#   geomanager/models/core.py:17  from wagtail_adminsortable.models import AdminSortable
+#
+# wagtail-adminsortable is taken from the same wmo-raf fork ClimWeb pins, not PyPI.
+wagtail-adminsortable @ https://github.com/wmo-raf/wagtail-admin-sortable/archive/33bf22f290e7a4210b44667e9ff56e4b35ad309e.zip
+django-countries==7.6.1
+geopandas==1.1.3

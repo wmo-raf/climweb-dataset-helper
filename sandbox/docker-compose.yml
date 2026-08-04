@@ -1,0 +1,41 @@
+# Run from this directory:  docker compose up --build
+#
+# The build context is the repo root so the Dockerfile can install the package from
+# source; everything else lives in sandbox/.
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_DB: dataset_helper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - sandbox_db:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d dataset_helper" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sandbox:
+    build:
+      context: ..
+      dockerfile: sandbox/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgis://postgres:postgres@db:5432/dataset_helper
+    volumes:
+      # Live-reload the app and the sandbox project without rebuilding.
+      - ../dataset_helper:/app/dataset_helper
+      - ./:/app/sandbox
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  sandbox_db:
