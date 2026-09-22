@@ -4,7 +4,7 @@
 
 # Pinned to the versions ClimWeb runs, so the sandbox reproduces production.
 geomanager==0.6.4
-wagtail==7.3.2
+wagtail==7.3.4
 django==5.2.14
 adm-boundary-manager==0.3.0
 dj-database-url==2.3.0
