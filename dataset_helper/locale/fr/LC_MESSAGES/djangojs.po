@@ -583,3 +583,14 @@ msgstr "Légende WMS"
 
 msgid "enabled"
 msgstr "activées"
+
+# ── Open-Meteo ──
+
+msgid "Weather model"
+msgstr "Modèle météo"
+
+msgid "Variable"
+msgstr "Variable"
+
+msgid "%(count)s regional layers left out: they have no data over the configured country."
+msgstr "%(count)s couches régionales écartées : elles n’ont pas de données sur le pays configuré."

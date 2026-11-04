@@ -1318,6 +1318,12 @@
         <summary>${gettext('Errors')} (${data.errors.length})</summary><ul>${errs}</ul></details>`
     }
 
+    if (data.skipped_out_of_coverage) {
+      html += `<div class="preview-sub" style="margin-top:14px;">
+        ${escapeHtml(interpolate(gettext('%(count)s regional layers left out: they have no data over the configured country.'),
+          {count: data.skipped_out_of_coverage}, true))}</div>`
+    }
+
     if (!hasChange) {
       html += `<div class="preview-sub" style="margin-top:14px;">
         ${gettext('Nothing to apply — catalog and database are in sync.')}</div>`
@@ -1835,10 +1841,14 @@
       '&TRANSPARENT=true'
   }
 
+  // GeoManager's default for OpenMeteoLayer.base_url
+  const OPENMETEO_BASE_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial'
+
   function buildDetailPanel(entry) {
     const lt = entry.layer_type || 'wms'
     const url = lt === 'wms' ? entry.wms_url
       : (lt === 'raster_tile' || lt === 'vector_tile') ? entry.tile_url
+      : lt === 'openmeteo' ? `${entry.openmeteo_base_url || OPENMETEO_BASE_URL}/${entry.openmeteo_domain}/latest.json`
       : entry.file_url
 
     const cell = (k, v, mono) => v
@@ -1874,6 +1884,8 @@
     return `<div class="dh-detail"><div class="dh-detail-card">
       <div class="dh-meta-grid">
         ${cell(gettext('Layer name'), entry.layer_name, true)}
+        ${cell(gettext('Weather model'), entry.openmeteo_domain, true)}
+        ${cell(gettext('Variable'), entry.openmeteo_variable, true)}
         ${cell(gettext('Type'), (entry.layer_type || 'wms'))}
         ${urlCell}
         ${cell(gettext('Provider'), entry.meta_source)}

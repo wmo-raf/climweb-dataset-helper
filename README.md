@@ -1,8 +1,8 @@
 # ClimWeb Dataset Helper
 
-Wizards for ingesting reference datasets — WMS, raster (COG/tile), vector (tile/PMTiles)
-and OCHA/HDX admin boundaries — into [ClimWeb](https://github.com/wmo-raf/nmhs-cms)
-via GeoManager.
+Wizards for ingesting reference datasets — WMS, raster (COG/tile), vector (tile/PMTiles),
+Open-Meteo weather model forecasts and OCHA/HDX admin boundaries — into
+[ClimWeb](https://github.com/wmo-raf/nmhs-cms) via GeoManager.
 
 Previously distributed as a ClimWeb *plugin* (installed with `install_plugin.sh` into
 `CLIMWEB_PLUGIN_DIR`). It is now an ordinary pip-installable Django/Wagtail app, packaged
@@ -137,6 +137,33 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
+
+## Open-Meteo datasets
+
+The catalog lists the weather model forecasts published by
+[Open-Meteo](https://open-meteo.com/) as `.om` files: one dataset per variable and weather
+model, in an *Open-Meteo forecast* subcategory of each thematic category. They need a
+GeoManager with the `OpenMeteoLayer` model (`openmeteo` layer type), and a MapViewer
+rendering them with
+[`@openmeteo/weather-map-layer`](https://github.com/open-meteo/weather-map-layer).
+
+Unlike the other entries they are not selected when first loaded: pick the ones to
+provision in the tree. Only the global models are listed. The script can add the
+regional ones (Europe, North America, Japan…) with `--regional`: they carry their
+footprint and are only loaded when they cover the configured country.
+
+These datasets are generated: `scripts/openmeteo_catalog.mjs` reads the weather models,
+variables, labels and footprints from the npm package, checks which variables the latest
+run of each model provides, and rewrites them in `catalog.json` (the rest of the file is
+left as is). Rerun it when Open-Meteo adds models or variables:
+
+```shell
+npm install --no-save @openmeteo/weather-map-layer@0.3.0
+node scripts/openmeteo_catalog.mjs              # --dry-run to only print the counts
+```
+
+or point it at the package installed in a MapViewer checkout with
+`--package ../geomapviewer/node_modules/@openmeteo/weather-map-layer`.
 
 ## Development
 

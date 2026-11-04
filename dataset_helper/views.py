@@ -172,6 +172,8 @@ def catalog_load_embedded(request):
         msg += _(', %(count)d disabled (gone from JSON)') % {'count': stats['removed']}
     if stats.get('skipped_estation'):
         msg += _(', %(count)d skipped (not on local eStation)') % {'count': stats['skipped_estation']}
+    if stats.get('skipped_out_of_coverage'):
+        msg += _(', %(count)d skipped (no data over the country)') % {'count': stats['skipped_out_of_coverage']}
 
     return JsonResponse({
         'status': 'success',
