@@ -142,6 +142,7 @@ class CatalogEntry(models.Model):
     LAYER_TYPE_RASTER_FILE = 'raster_file'
     LAYER_TYPE_VECTOR_FILE = 'vector_file'
     LAYER_TYPE_RASTER_COG = 'raster_cog'
+    LAYER_TYPE_OPENMETEO = 'openmeteo'
     LAYER_TYPE_CHOICES = (
         (LAYER_TYPE_WMS, _('WMS')),
         (LAYER_TYPE_RASTER_TILE, _('Raster Tile')),
@@ -149,6 +150,7 @@ class CatalogEntry(models.Model):
         (LAYER_TYPE_RASTER_FILE, _('Raster File')),
         (LAYER_TYPE_VECTOR_FILE, _('Vector File')),
         (LAYER_TYPE_RASTER_COG, _('Raster COG')),
+        (LAYER_TYPE_OPENMETEO, _('Open-Meteo')),
     )
 
     ORIGIN_CONFIG = 'config'
@@ -257,6 +259,27 @@ class CatalogEntry(models.Model):
         verbose_name=_("COG datetime display format"),
     )
 
+    # --- Open-Meteo configuration (openmeteo) ---
+    openmeteo_base_url = models.CharField(
+        max_length=2048, blank=True, default='',
+        verbose_name=_("Open-Meteo data base URL"),
+        help_text=_("Root URL of the Open-Meteo spatial data. Leave empty to use the GeoManager default."),
+    )
+    openmeteo_domain = models.CharField(
+        max_length=100, blank=True, default='',
+        verbose_name=_("Open-Meteo weather model"),
+        help_text=_("Open-Meteo domain of the weather model, e.g. ecmwf_ifs025"),
+    )
+    openmeteo_variable = models.CharField(
+        max_length=100, blank=True, default='',
+        verbose_name=_("Open-Meteo variable"),
+        help_text=_("Weather variable to display, e.g. temperature_2m"),
+    )
+    openmeteo_date_format = models.CharField(
+        max_length=100, blank=True, default='',
+        verbose_name=_("Open-Meteo datetime display format"),
+    )
+
     # --- Raster style configuration (raster_cog) ---
     raster_style_json = models.JSONField(
         blank=True, null=True,
@@ -325,6 +348,14 @@ class CatalogEntry(models.Model):
         verbose_name=_("Auto update interval (minutes)"),
         help_text=_("Auto-refresh interval for multi-temporal layers, in minutes. "
                     "Leave empty to disable auto-updating."),
+    )
+    current_time_method = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name=_("Current time method"),
+        help_text=_("How the map viewer picks the default time of a multi-temporal dataset. "
+                    "Leave empty to use the GeoManager default."),
     )
 
     # --- State ---

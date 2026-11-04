@@ -936,3 +936,62 @@ msgstr "إلغاء تحديد كل الطبقات"
 
 msgid "Clear search"
 msgstr "مسح البحث"
+
+# ── Open-Meteo ──
+
+msgid "Open-Meteo"
+msgstr "Open-Meteo"
+
+msgid "Open-Meteo data base URL"
+msgstr "عنوان URL الأساسي لبيانات Open-Meteo"
+
+msgid "Root URL of the Open-Meteo spatial data. Leave empty to use the GeoManager default."
+msgstr "عنوان URL الجذر للبيانات المكانية لـ Open-Meteo. اتركه فارغًا لاستخدام القيمة الافتراضية في GeoManager."
+
+msgid "Open-Meteo weather model"
+msgstr "نموذج الطقس في Open-Meteo"
+
+msgid "Open-Meteo domain of the weather model, e.g. ecmwf_ifs025"
+msgstr "نطاق Open-Meteo لنموذج الطقس، مثل ecmwf_ifs025"
+
+msgid "Open-Meteo variable"
+msgstr "متغير Open-Meteo"
+
+msgid "Weather variable to display, e.g. temperature_2m"
+msgstr "متغير الطقس المراد عرضه، مثل temperature_2m"
+
+msgid "Open-Meteo datetime display format"
+msgstr "صيغة عرض التاريخ/الوقت لـ Open-Meteo"
+
+msgid "Current time method"
+msgstr "طريقة الوقت الحالي"
+
+msgid "How the map viewer picks the default time of a multi-temporal dataset. Leave empty to use the GeoManager default."
+msgstr "كيفية اختيار عارض الخرائط للوقت الافتراضي لمجموعة بيانات متعددة الأزمنة. اتركه فارغًا لاستخدام القيمة الافتراضية في GeoManager."
+
+#, python-format
+msgid ", %(count)d skipped (no data over the country)"
+msgstr "، تم تخطي %(count)d (لا توجد بيانات فوق البلد)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "تجميع الطبقات حسب"
+
+msgid "Group layers by category"
+msgstr "تجميع الطبقات حسب الفئة"
+
+msgid "Group layers by data source"
+msgstr "تجميع الطبقات حسب مصدر البيانات"
+
+msgid "Categories"
+msgstr "الفئات"
+
+msgid "Sources"
+msgstr "المصادر"
+
+msgid "Other sources"
+msgstr "مصادر أخرى"
+
+msgid "Unknown"
+msgstr "غير معروف"

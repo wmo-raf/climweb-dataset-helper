@@ -955,3 +955,62 @@ msgstr "Deseleccionar todas las capas"
 
 msgid "Clear search"
 msgstr "Borrar la búsqueda"
+
+# ── Open-Meteo ──
+
+msgid "Open-Meteo"
+msgstr "Open-Meteo"
+
+msgid "Open-Meteo data base URL"
+msgstr "URL base de los datos de Open-Meteo"
+
+msgid "Root URL of the Open-Meteo spatial data. Leave empty to use the GeoManager default."
+msgstr "URL raíz de los datos espaciales de Open-Meteo. Déjelo vacío para usar el valor predeterminado de GeoManager."
+
+msgid "Open-Meteo weather model"
+msgstr "Modelo meteorológico de Open-Meteo"
+
+msgid "Open-Meteo domain of the weather model, e.g. ecmwf_ifs025"
+msgstr "Dominio Open-Meteo del modelo meteorológico, p. ej. ecmwf_ifs025"
+
+msgid "Open-Meteo variable"
+msgstr "Variable de Open-Meteo"
+
+msgid "Weather variable to display, e.g. temperature_2m"
+msgstr "Variable meteorológica a mostrar, p. ej. temperature_2m"
+
+msgid "Open-Meteo datetime display format"
+msgstr "Formato de visualización de fecha/hora de Open-Meteo"
+
+msgid "Current time method"
+msgstr "Método de la hora actual"
+
+msgid "How the map viewer picks the default time of a multi-temporal dataset. Leave empty to use the GeoManager default."
+msgstr "Cómo el visor de mapas elige la hora predeterminada de un conjunto de datos multitemporal. Déjelo vacío para usar el valor predeterminado de GeoManager."
+
+#, python-format
+msgid ", %(count)d skipped (no data over the country)"
+msgstr ", %(count)d omitidos (sin datos sobre el país)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "Agrupar las capas por"
+
+msgid "Group layers by category"
+msgstr "Agrupar las capas por categoría"
+
+msgid "Group layers by data source"
+msgstr "Agrupar las capas por fuente de datos"
+
+msgid "Categories"
+msgstr "Categorías"
+
+msgid "Sources"
+msgstr "Fuentes"
+
+msgid "Other sources"
+msgstr "Otras fuentes"
+
+msgid "Unknown"
+msgstr "Desconocido"

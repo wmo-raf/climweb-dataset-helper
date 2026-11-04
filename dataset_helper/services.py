@@ -5,12 +5,15 @@ import os
 import re
 import urllib.request
 import uuid
+from urllib.parse import urlparse
 
 from django.contrib.staticfiles import finders
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError, RestrictedError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.text import slugify
+from django.utils.translation import gettext
 from geomanager.models.core import Category, Dataset, Metadata, SubCategory
 from geomanager.models.raster_style import ColorValue, RasterStyle
 from geomanager.models.raster_tile import RasterTileLayer
@@ -29,6 +32,12 @@ try:
     from geomanager.models.raster_cog import RasterCOGLayer
 except ImportError:
     RasterCOGLayer = None
+
+# Same for openmeteo: _provision_openmeteo raises at sync time without it.
+try:
+    from geomanager.models.openmeteo import OpenMeteoLayer
+except ImportError:
+    OpenMeteoLayer = None
 
 from .models import CatalogEntry, CatalogState, PluginSettings
 from .provisioners import PROVISIONERS as _PACKAGED_PROVISIONERS
@@ -71,6 +80,17 @@ SOURCE_HASH_FIELDS = (
     'category_order', 'subcategory_order', 'entry_order',
 )
 
+# Catalog-derived fields added after entries were first loaded. They are
+# hashed only when set, so adding one leaves the hash of every entry that
+# does not use it unchanged, instead of flagging the whole catalog as updated.
+OPTIONAL_SOURCE_HASH_FIELDS = (
+    'openmeteo_base_url', 'openmeteo_domain', 'openmeteo_variable',
+    'openmeteo_date_format',
+    'current_time_method',
+)
+
+DEFAULT_CURRENT_TIME_METHOD = 'latest_from_source'
+
 
 def compute_source_hash(values):
     """
@@ -79,9 +99,12 @@ def compute_source_hash(values):
     or a ``CatalogEntry`` instance.
     """
     if isinstance(values, dict):
-        payload = {k: values.get(k) for k in SOURCE_HASH_FIELDS}
+        get = values.get
     else:
-        payload = {k: getattr(values, k, None) for k in SOURCE_HASH_FIELDS}
+        def get(k):
+            return getattr(values, k, None)
+    payload = {k: get(k) for k in SOURCE_HASH_FIELDS}
+    payload.update({k: get(k) for k in OPTIONAL_SOURCE_HASH_FIELDS if get(k)})
     serialized = json_module.dumps(payload, sort_keys=True, default=str)
     return hashlib.sha256(serialized.encode('utf-8')).hexdigest()
 
@@ -146,6 +169,16 @@ def _project_provisioned_layer(dataset):
             'time_step_unit': rc.time_step_unit,
             'date_format': rc.date_format,
         }
+    if lt == 'openmeteo' and OpenMeteoLayer is not None:
+        om = OpenMeteoLayer.objects.filter(dataset=dataset).first()
+        if om is None:
+            return {}
+        return {
+            'base_url': om.base_url,
+            'domain': om.domain,
+            'variable': om.variable,
+            'date_format': om.date_format,
+        }
     if lt == 'raster_file' and RasterFileLayer is not None:
         # The list of ingested LayerRasterFile rows changes over time as new
         # frames arrive — including them would make the hash drift on every
@@ -179,6 +212,10 @@ def compute_provisioned_hash(dataset_id):
         'initial_visible': dataset.initial_visible,
         'auto_update_interval': dataset.auto_update_interval,
     }
+    # Left out at its default, like OPTIONAL_SOURCE_HASH_FIELDS, so the
+    # baseline of the datasets provisioned before it was set stays valid.
+    if dataset.current_time_method != DEFAULT_CURRENT_TIME_METHOD:
+        payload['current_time_method'] = dataset.current_time_method
 
     metadata = dataset.metadata
     if metadata is not None:
@@ -366,7 +403,79 @@ def preview_embedded_catalog():
         'errors': base_stats.get('errors', []),
         'skipped_estation': base_stats.get('skipped_estation', 0),
         'skipped_ecmwf_no_token': base_stats.get('skipped_ecmwf_no_token', 0),
+        'skipped_out_of_coverage': base_stats.get('skipped_out_of_coverage', 0),
     }
+
+
+def _valid_current_time_method(value):
+    """Return ``value`` if GeoManager knows it as a Dataset.current_time_method, else ''."""
+    known = {choice for choice, _label in Dataset.CURRENT_TIME_METHOD_CHOICES}
+    return value if value in known else ''
+
+
+def _point_in_ring(x, y, ring):
+    """Ray casting: whether (x, y) lies inside the closed ``ring``."""
+    inside = False
+    for (x1, y1), (x2, y2) in zip(ring, ring[1:]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
+
+def _segments_cross(a, b, c, d):
+    """Whether segments ab and cd intersect (touching counts)."""
+    def orientation(p, q, r):
+        value = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+        return (value > 0) - (value < 0)
+
+    def on_segment(p, q, r):
+        return (min(p[0], q[0]) <= r[0] <= max(p[0], q[0])
+                and min(p[1], q[1]) <= r[1] <= max(p[1], q[1]))
+
+    o1, o2 = orientation(a, b, c), orientation(a, b, d)
+    o3, o4 = orientation(c, d, a), orientation(c, d, b)
+    if o1 != o2 and o3 != o4:
+        return True
+    # collinear
+    return ((o1 == 0 and on_segment(a, b, c)) or (o2 == 0 and on_segment(a, b, d))
+            or (o3 == 0 and on_segment(c, d, a)) or (o4 == 0 and on_segment(c, d, b)))
+
+
+def _ring_intersects_box(ring, west, south, east, north):
+    if any(west <= x <= east and south <= y <= north for x, y in ring):
+        return True
+    # no ring vertex in the box: they overlap if the box is inside the ring,
+    # or if a ring edge crosses the box
+    if _point_in_ring((west + east) / 2, (south + north) / 2, ring):
+        return True
+    corners = [(west, south), (east, south), (east, north), (west, north), (west, south)]
+    return any(
+        _segments_cross(a, b, c, d)
+        for a, b in zip(ring, ring[1:])
+        for c, d in zip(corners, corners[1:])
+    )
+
+
+def _coverage_intersects_country(coverage, country_bbox):
+    """
+    Whether a layer's ``coverage`` (closed [lon, lat] ring of the area it has
+    data for, given by regional layers of the catalog) overlaps the country
+    bounding box from the plugin settings ([south, north, west, east]).
+    Layers without coverage, or a site without a country, always pass.
+    """
+    if not coverage or not country_bbox or len(country_bbox) != 4:
+        return True
+    try:
+        ring = [(float(lon), float(lat)) for lon, lat in coverage]
+        south, north, west, east = (float(v) for v in country_bbox)
+    except (TypeError, ValueError):
+        return True
+    # Rings crossing the antimeridian keep increasing longitudes past ±180:
+    # also try the box one turn east and west.
+    return any(
+        _ring_intersects_box(ring, west + shift, south, east + shift, north)
+        for shift in (0, 360, -360)
+    )
 
 
 def _parse_iso_dt(value):
@@ -478,6 +587,7 @@ def load_catalog_from_config(json_data, handle_entry=None, conflict_policy='over
         'removed': 0,
         'skipped_estation': 0,
         'skipped_ecmwf_no_token': 0,
+        'skipped_out_of_coverage': 0,
         'errors': [],
     }
 
@@ -514,7 +624,8 @@ def load_catalog_from_config(json_data, handle_entry=None, conflict_policy='over
         handle_entry = _tracking_wrapper
 
     if json_data.get('categories'):
-        _load_nested_format(json_data, stats, lang, ecmwf_token, estation_product_ids, estation_url, handle_entry)
+        _load_nested_format(json_data, stats, lang, ecmwf_token, estation_product_ids, estation_url, handle_entry,
+                            country_bbox=settings.country_bbox)
     elif json_data.get('products'):
         _load_products_format(json_data, stats, lang, ecmwf_token, estation_product_ids, estation_url, handle_entry)
     else:
@@ -544,8 +655,14 @@ def load_catalog_from_config(json_data, handle_entry=None, conflict_policy='over
     return stats
 
 
-def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_product_ids=None, estation_url='', handle_entry=None):
-    """Load from the nested categories > subcategories > datasets > layers format."""
+def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_product_ids=None, estation_url='', handle_entry=None,
+                        country_bbox=None):
+    """
+    Load from the nested categories > subcategories > datasets > layers format.
+
+    Layers with a ``coverage`` footprint that misses ``country_bbox`` (regional
+    weather models, …) are skipped.
+    """
     if handle_entry is None:
         handle_entry = _upsert_entry
 
@@ -571,6 +688,10 @@ def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_pr
                 for layer_data in layers_data:
                     layer_type = layer_data.get('type', 'wms')
                     dataset_title = resolve_i18n(dataset_data.get('title', '?'), lang)
+
+                    if not _coverage_intersects_country(layer_data.get('coverage'), country_bbox):
+                        stats['skipped_out_of_coverage'] += 1
+                        continue
 
                     public = True
 
@@ -631,6 +752,17 @@ def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_pr
                             continue
                         product_code = f"raster_cog_{hashlib.md5(cog_url.encode()).hexdigest()[:12]}"
 
+                    elif layer_type == 'openmeteo':
+                        om_domain = layer_data.get('domain', '')
+                        om_variable = layer_data.get('variable', '')
+                        if not om_domain or not om_variable:
+                            stats['errors'].append(
+                                f"Skipping openmeteo layer in '{cat_title}/{subcat_title}/"
+                                f"{dataset_title}': missing domain or variable"
+                            )
+                            continue
+                        product_code = f"openmeteo_{om_domain}_{om_variable}"
+
                     else:
                         stats['errors'].append(
                             f"Skipping layer in '{cat_title}/{subcat_title}/"
@@ -662,6 +794,10 @@ def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_pr
                         'cog_time_step_value': int(layer_data.get('time_step_value', 1)) if layer_type == 'raster_cog' else 1,
                         'cog_time_step_unit': layer_data.get('time_step_unit', 'years') if layer_type == 'raster_cog' else 'years',
                         'cog_date_format': layer_data.get('date_format', '') if layer_type == 'raster_cog' else '',
+                        'openmeteo_base_url': (layer_data.get('base_url') or '').rstrip('/') if layer_type == 'openmeteo' else '',
+                        'openmeteo_domain': layer_data.get('domain', '') if layer_type == 'openmeteo' else '',
+                        'openmeteo_variable': layer_data.get('variable', '') if layer_type == 'openmeteo' else '',
+                        'openmeteo_date_format': layer_data.get('date_format', '') if layer_type == 'openmeteo' else '',
                         'raster_style_json': layer_data.get('raster_style') or None,
                         'render_layers_json': layer_data.get('render_layers') or None,
                         'popup_config_json': layer_data.get('popup_config') or None,
@@ -673,6 +809,9 @@ def _load_nested_format(json_data, stats, lang='en', ecmwf_token='', estation_pr
                         'near_realtime': dataset_data.get('near_realtime', False),
                         'initial_visible': dataset_data.get('initial_visible', False),
                         'auto_update_interval': dataset_data.get('auto_update_interval', None),
+                        'current_time_method': _valid_current_time_method(dataset_data.get('current_time_method')),
+                        # selection state of a new entry only, see _upsert_entry
+                        'enabled': bool(dataset_data.get('enabled', True)),
                         'origin': CatalogEntry.ORIGIN_CONFIG,
                         'meta_source': metadata.get('source', ''),
                         'meta_resolution': metadata.get('resolution', ''),
@@ -783,7 +922,12 @@ def _upsert_entry(product_code, defaults, stats, conflict_policy='overwrite'):
                            provisioned Climweb Dataset has diverged from
                            its baseline AND conflict_policy='skip' — the
                            local edits win, the catalog change is held off.
+
+    ``defaults['enabled']`` (when given) only applies to a new entry: on
+    later loads the admin's selection is kept.
     """
+    defaults = dict(defaults)
+    enabled = defaults.pop('enabled', True)
     incoming_hash = compute_source_hash(defaults)
 
     try:
@@ -795,6 +939,7 @@ def _upsert_entry(product_code, defaults, stats, conflict_policy='overwrite'):
         CatalogEntry.objects.create(
             product_code=product_code,
             source_hash=incoming_hash,
+            enabled=enabled,
             **defaults,
         )
         stats['created'] += 1
@@ -1019,6 +1164,7 @@ def _create_common_objects(entry):
         can_clip=False,
         initial_visible=entry.initial_visible,
         auto_update_interval=entry.auto_update_interval,
+        current_time_method=entry.current_time_method or DEFAULT_CURRENT_TIME_METHOD,
     )
 
     if entry.summary:
@@ -1056,6 +1202,8 @@ def _clear_layer_objects(dataset):
     VectorTileLayer.objects.filter(dataset=dataset).delete()
     if RasterCOGLayer is not None:
         RasterCOGLayer.objects.filter(dataset=dataset).delete()
+    if OpenMeteoLayer is not None:
+        OpenMeteoLayer.objects.filter(dataset=dataset).delete()
 
 
 def _reprovision_entry(entry, dataset):
@@ -1100,6 +1248,8 @@ def _reprovision_entry(entry, dataset):
     dataset.near_realtime = entry.near_realtime
     dataset.initial_visible = entry.initial_visible
     dataset.auto_update_interval = entry.auto_update_interval
+    if entry.current_time_method:
+        dataset.current_time_method = entry.current_time_method
     dataset.summary = entry.summary or ''
     dataset.save()
 
@@ -1239,11 +1389,38 @@ def _provision_raster_cog(entry, dataset):
     )
 
 
+def _provision_openmeteo(entry, dataset):
+    """
+    Create an OpenMeteoLayer from catalog entry config. The map viewer reads
+    the latest run of the weather model and renders the variable with the
+    Open-Meteo protocol, so there is no style or legend to set up.
+    """
+    if OpenMeteoLayer is None:
+        raise RuntimeError(
+            "openmeteo layer type requires geomanager with the OpenMeteoLayer model. "
+            "Current geomanager build does not expose it."
+        )
+    kwargs = dict(
+        dataset=dataset,
+        title=entry.layer_title or entry.title,
+        default=True,
+        domain=entry.openmeteo_domain,
+        variable=entry.openmeteo_variable,
+    )
+    # left out, GeoManager falls back to the public Open-Meteo bucket
+    if entry.openmeteo_base_url:
+        kwargs['base_url'] = entry.openmeteo_base_url
+    if entry.openmeteo_date_format:
+        kwargs['date_format'] = entry.openmeteo_date_format
+    OpenMeteoLayer.objects.create(**kwargs)
+
+
 _PROVISIONERS = {
     'wms': _provision_wms,
     'raster_tile': _provision_raster_tile,
     'vector_tile': _provision_vector_tile,
     'raster_cog': _provision_raster_cog,
+    'openmeteo': _provision_openmeteo,
     **_PACKAGED_PROVISIONERS,  # adds 'raster_file' (provisioners/raster_file.py)
 }
 
@@ -1491,15 +1668,96 @@ def clear_provisioned_datasets():
     }
 
 
+# ── Data sources ─────────────────────────────────────────────────────────────
+# The tree UI can also group the catalog by data source rather than by
+# category. A source is derived from what an entry already holds (layer type,
+# service host), so the catalog itself carries no source structure.
+
+# (key, title, hosts): an entry belongs to the source when the host of its
+# service URL is one of `hosts` or a subdomain of one.
+SOURCE_HOSTS = (
+    ('ecmwf', 'ECMWF', ('ecmwf.int',)),
+    ('eumetsat', 'EUMETSAT', ('eumetsat.int',)),
+    ('glofas', 'GloFAS', ('globalfloods.eu',)),
+    ('efas', 'EFAS', ('european-flood.emergency.copernicus.eu',)),
+    ('estation', 'JRC eStation', ('estation.jrc.ec.europa.eu',)),
+)
+OTHER_SOURCE = 'other'
+
+
+def _entry_service_url(entry):
+    if entry.layer_type == 'wms':
+        return entry.wms_url
+    if entry.layer_type in ('raster_tile', 'vector_tile'):
+        return entry.tile_url
+    if entry.layer_type == 'raster_cog':
+        return entry.cog_url_template
+    return entry.file_url
+
+
+def _trailing_group(text):
+    """
+    Content of the parentheses closing ``text``, nested ones included:
+    '850 hPa temperature (GEM Global (upper levels))' → 'GEM Global (upper levels)'.
+    """
+    text = (text or '').rstrip()
+    if not text.endswith(')'):
+        return ''
+    depth = 0
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] == ')':
+            depth += 1
+        elif text[i] == '(':
+            depth -= 1
+            if depth == 0:
+                return text[i + 1:-1].strip()
+    return ''
+
+
+def entry_source(entry, estation_url=''):
+    """
+    Return ``(source, source_title, subsource, subsource_title)`` for an entry.
+
+    Open-Meteo layers are split by weather model, whose label the generated
+    titles end with ("Precipitation (CMA GRAPES Global)"). Entries matching
+    no known source go to "Other sources", split by provider. The other
+    sources have no sub-source: ``subsource`` is then ''. Keys are slugs, as
+    the UI builds element ids from them.
+    """
+    if entry.layer_type == 'openmeteo':
+        domain = entry.openmeteo_domain or 'unknown'
+        return ('openmeteo', 'Open-Meteo', slugify(domain) or 'unknown', _trailing_group(entry.title) or domain)
+
+    url = _entry_service_url(entry) or ''
+    # A local eStation replaces the JRC host (see _substitute_estation_url),
+    # and the flat products format only tags its entries through meta_source.
+    if ((estation_url and url.startswith(estation_url.rstrip('/')))
+            or entry.meta_source == 'JRC eStation'):
+        return ('estation', 'JRC eStation', '', '')
+
+    host = (urlparse(url).hostname or '').lower()
+    for key, title, hosts in SOURCE_HOSTS:
+        if any(host == h or host.endswith('.' + h) for h in hosts):
+            return (key, title, '', '')
+
+    # "WorldPop — University of Southampton" → "WorldPop"
+    provider = (entry.meta_source or '').split(' — ')[0].strip() or host or gettext('Unknown')
+    return (OTHER_SOURCE, gettext('Other sources'), slugify(provider) or 'unknown', provider)
+
+
 def get_catalog_tree():
     """
     Return the full catalog as a nested dict for the tree UI.
-    Structure: categories > subcategories > entries
+    Structure: categories > subcategories > entries. Each entry also carries
+    its data source (see entry_source), from which the UI builds the
+    by-source view.
     """
     entries = CatalogEntry.objects.all()
+    estation_url = PluginSettings.load().estation_url
     tree = {}
 
     for entry in entries:
+        source, source_title, subsource, subsource_title = entry_source(entry, estation_url)
         cat = entry.category_title
         subcat = entry.subcategory_title
 
@@ -1529,6 +1787,9 @@ def get_catalog_tree():
             'tile_url': entry.tile_url,
             'is_pmtiles': entry.is_pmtiles,
             'file_url': entry.file_url,
+            'openmeteo_base_url': entry.openmeteo_base_url,
+            'openmeteo_domain': entry.openmeteo_domain,
+            'openmeteo_variable': entry.openmeteo_variable,
             'render_layers_json': entry.render_layers_json,
             'popup_config_json': entry.popup_config_json,
             'popup': entry.popup,
@@ -1550,6 +1811,10 @@ def get_catalog_tree():
             'meta_function': entry.meta_function,
             'meta_overview': entry.meta_overview,
             'meta_learn_more': entry.meta_learn_more,
+            'source': source,
+            'source_title': source_title,
+            'subsource': subsource,
+            'subsource_title': subsource_title,
         })
 
     # Convert to list, preserving insertion order (driven by DB ordering)
