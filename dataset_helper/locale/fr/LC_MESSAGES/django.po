@@ -987,3 +987,26 @@ msgstr "Façon dont la visionneuse de cartes choisit l’heure affichée par dé
 #, python-format
 msgid ", %(count)d skipped (no data over the country)"
 msgstr ", %(count)d ignorés (pas de données sur le pays)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "Regrouper les couches par"
+
+msgid "Group layers by category"
+msgstr "Regrouper les couches par catégorie"
+
+msgid "Group layers by data source"
+msgstr "Regrouper les couches par source de données"
+
+msgid "Categories"
+msgstr "Catégories"
+
+msgid "Sources"
+msgstr "Sources"
+
+msgid "Other sources"
+msgstr "Autres sources"
+
+msgid "Unknown"
+msgstr "Inconnu"

@@ -991,3 +991,26 @@ msgstr "Cómo el visor de mapas elige la hora predeterminada de un conjunto de d
 #, python-format
 msgid ", %(count)d skipped (no data over the country)"
 msgstr ", %(count)d omitidos (sin datos sobre el país)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "Agrupar las capas por"
+
+msgid "Group layers by category"
+msgstr "Agrupar las capas por categoría"
+
+msgid "Group layers by data source"
+msgstr "Agrupar las capas por fuente de datos"
+
+msgid "Categories"
+msgstr "Categorías"
+
+msgid "Sources"
+msgstr "Fuentes"
+
+msgid "Other sources"
+msgstr "Otras fuentes"
+
+msgid "Unknown"
+msgstr "Desconocido"

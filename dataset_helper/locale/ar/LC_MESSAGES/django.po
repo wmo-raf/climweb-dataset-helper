@@ -972,3 +972,26 @@ msgstr "كيفية اختيار عارض الخرائط للوقت الافتر�
 #, python-format
 msgid ", %(count)d skipped (no data over the country)"
 msgstr "، تم تخطي %(count)d (لا توجد بيانات فوق البلد)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "تجميع الطبقات حسب"
+
+msgid "Group layers by category"
+msgstr "تجميع الطبقات حسب الفئة"
+
+msgid "Group layers by data source"
+msgstr "تجميع الطبقات حسب مصدر البيانات"
+
+msgid "Categories"
+msgstr "الفئات"
+
+msgid "Sources"
+msgstr "المصادر"
+
+msgid "Other sources"
+msgstr "مصادر أخرى"
+
+msgid "Unknown"
+msgstr "غير معروف"

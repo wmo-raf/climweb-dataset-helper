@@ -991,3 +991,26 @@ msgstr "Como o visualizador de mapas escolhe a hora padrão de um conjunto de da
 #, python-format
 msgid ", %(count)d skipped (no data over the country)"
 msgstr ", %(count)d ignorados (sem dados sobre o país)"
+
+# ── Tree view by data source ──
+
+msgid "Group layers by"
+msgstr "Agrupar as camadas por"
+
+msgid "Group layers by category"
+msgstr "Agrupar as camadas por categoria"
+
+msgid "Group layers by data source"
+msgstr "Agrupar as camadas por fonte de dados"
+
+msgid "Categories"
+msgstr "Categorias"
+
+msgid "Sources"
+msgstr "Fontes"
+
+msgid "Other sources"
+msgstr "Outras fontes"
+
+msgid "Unknown"
+msgstr "Desconhecido"

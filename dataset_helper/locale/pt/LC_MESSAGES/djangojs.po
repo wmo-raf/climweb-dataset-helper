@@ -588,3 +588,8 @@ msgstr "Variável"
 
 msgid "%(count)s regional layers left out: they have no data over the configured country."
 msgstr "%(count)s camadas regionais descartadas: não têm dados sobre o país configurado."
+
+# ── Tree view by data source ──
+
+msgid "Check/uncheck all layers from this source"
+msgstr "Marcar/desmarcar todas as camadas desta fonte"

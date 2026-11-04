@@ -582,6 +582,12 @@
        Layer tree (Claude Design handoff): controls + tree + detail
        ============================================================ */
     .dh-treebar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; font-family: var(--dh-sans); }
+    /* view switch: group the tree by category or by data source */
+    .dh-seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--dh-line); border-radius: var(--dh-r-md); background: var(--dh-surface-2); flex: 0 0 auto; }
+    .dh-seg button { display: inline-flex; align-items: center; gap: 6px; border: 0; margin: 0; padding: 6px 11px; border-radius: var(--dh-r-sm); background: none; color: var(--dh-ink-3); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; line-height: 1.2; }
+    .dh-seg button svg { display: block; }
+    .dh-seg button:hover { color: var(--dh-ink); }
+    .dh-seg button.active { background: var(--dh-surface); color: var(--dh-ink); box-shadow: var(--dh-shadow-1); }
     .dh-searchbox { position: relative; flex: 1; min-width: 220px; max-width: 380px; }
     .dh-searchbox .dh-search-ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--dh-ink-4); pointer-events: none; display: grid; }
     .dh-searchbox input { width: 100%; font-family: inherit; font-size: 13.5px; padding: 9px 34px 9px 36px; border: 1px solid var(--dh-line); border-radius: var(--dh-r-md); background: var(--dh-surface); color: var(--dh-ink); }
@@ -624,6 +630,10 @@
     .dh-layer-row { padding-left: 80px; padding-top: 9px; padding-bottom: 9px; }
     .dh-layer-row .dh-name { font-size: 13.5px; }
     .dh-layer-meta { display: flex; align-items: center; gap: 8px; }
+    /* source groups without sub-sources list their layers right under the group */
+    .dh-layers-flat .dh-layer-row, .dh-layers-flat .dh-detail { padding-left: 52px; }
+    /* by-source view: where the layer sits in the catalog */
+    .dh-path { font-size: 12px; font-weight: 600; color: var(--dh-ink-4); white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
 
     /* custom checkbox (tri-state) */
     .dh-check { width: 19px; height: 19px; border-radius: 5px; border: 2px solid #c4c8d0; display: grid; place-items: center; flex: 0 0 auto; background: #fff; transition: .12s; color: #fff; }
@@ -883,6 +893,17 @@
         </div>
 
         <div id="catalog-toolbar" class="catalog-toolbar" style="display:flex;gap:9px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:flex-end;">
+            <!-- tree view switch: group the layers by category or by data source -->
+            <div class="dh-seg" id="catalog-view-seg" role="group" aria-label="{% trans 'Group layers by' %}" style="margin-right:auto;">
+                <button type="button" data-view="categories" onclick="setCatalogView('categories')" title="{% trans 'Group layers by category' %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>
+                    {% trans "Categories" %}
+                </button>
+                <button type="button" data-view="sources" onclick="setCatalogView('sources')" title="{% trans 'Group layers by data source' %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+                    {% trans "Sources" %}
+                </button>
+            </div>
             <button class="dh-btn dh-btn-md" style="background:#fff;color:#cf3b2e;border:1px solid #f0cdc9;" onclick="resetCatalog()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
                 {% trans "Reset Catalog" %}
@@ -1632,6 +1653,10 @@
   let openGroups = new Set()
   let catalogSearch = ''
   let catalogFilter = 'all'   // all | pending_add | pending_remove | disabled
+  // Tree grouping, kept per browser. Display only: the catalog stays
+  // categories > subcategories whichever view is shown.
+  let catalogView = 'categories'   // categories | sources
+  try { if (localStorage.getItem('dh-tree-view') === 'sources') catalogView = 'sources' } catch (e) { /* storage blocked */ }
 
   // --- tree helpers ---
   const DH_STATUS_COLOR = {
@@ -1661,12 +1686,87 @@
       segs.filter(([v]) => v > 0).map(([v, c]) => `<div style="width:${v / tot * 100}%;background:${c};"></div>`).join('') +
       `</span></span>`
   }
-  function _matchEntry(entry, catTitle, subTitle) {
+  function _matchEntry(entry) {
     if (catalogFilter !== 'all' && entry.status !== catalogFilter) return false
     const q = catalogSearch.trim().toLowerCase()
     if (!q) return true
-    return [(entry.title || ''), (entry.layer_name || ''), (entry.meta_source || ''),
-            (catTitle || ''), (subTitle || '')].some(s => s.toLowerCase().includes(q))
+    return [entry.title, entry.layer_name, entry.meta_source, entry._cat, entry._sub,
+            entry.source_title, entry.subsource_title].some(s => (s || '').toLowerCase().includes(q))
+  }
+
+  function setCatalogView(view) {
+    catalogView = view === 'sources' ? 'sources' : 'categories'
+    try { localStorage.setItem('dh-tree-view', catalogView) } catch (e) { /* storage blocked */ }
+    renderCatalog(false)
+  }
+  function _syncViewSeg() {
+    document.querySelectorAll('#catalog-view-seg button').forEach(b => {
+      const on = b.dataset.view === catalogView
+      b.classList.toggle('active', on)
+      b.setAttribute('aria-pressed', on ? 'true' : 'false')
+    })
+  }
+
+  const DH_ICON_CATEGORY = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>'
+  const DH_ICON_SOURCE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>'
+
+  // Top-level groups of the current view:
+  //   [{ id, title, entries, children: [{ id, title, entries }] | null }]
+  // children is null for a source without sub-sources: its layers are listed
+  // right under it. Ids are stable across reloads so openGroups keeps working.
+  function _viewGroups() {
+    const cats = catalogData.categories || []
+    if (catalogView !== 'sources') {
+      return cats.map((cat, ci) => ({
+        id: 'cat-' + ci,
+        title: cat.title,
+        entries: cat.subcategories.flatMap(sc => sc.entries),
+        children: cat.subcategories.map((sc, si) => ({ id: 'subcat-' + ci + '-' + si, title: sc.title, entries: sc.entries })),
+      }))
+    }
+    const bySource = new Map()
+    cats.forEach(cat => cat.subcategories.forEach(sc => sc.entries.forEach(e => {
+      const key = e.source || 'other'
+      let g = bySource.get(key)
+      if (!g) { g = { id: 'src-' + key, key, title: e.source_title || key, entries: [], subs: new Map() }; bySource.set(key, g) }
+      g.entries.push(e)
+      if (e.subsource) {
+        let s = g.subs.get(e.subsource)
+        if (!s) { s = { id: g.id + '--' + e.subsource, title: e.subsource_title || e.subsource, entries: [] }; g.subs.set(e.subsource, s) }
+        s.entries.push(e)
+      }
+    })))
+    const byTitle = (a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
+    return [...bySource.values()]
+      .sort((a, b) => (a.key === 'other') - (b.key === 'other') || byTitle(a, b))
+      .map(g => ({ id: g.id, title: g.title, entries: g.entries, children: g.subs.size ? [...g.subs.values()].sort(byTitle) : null }))
+  }
+
+  function _layerRowHtml(entry, bySource) {
+    const detailId = 'detail-' + entry.id
+    const isDetailOpen = openGroups.has(detailId)
+    const path = bySource && entry._cat
+      ? `<span class="dh-path" title="${escapeHtml(entry._cat + ' › ' + entry._sub)}">${escapeHtml(entry._cat)} › ${escapeHtml(entry._sub)}</span>` : ''
+    // under a sub-source (weather model, provider) the provider badge only repeats it
+    const provider = entry.meta_source && !(bySource && entry.subsource)
+      ? `<span class="dh-badge dh-badge-provider">${escapeHtml(entry.meta_source)}</span>` : ''
+    const type = `<span class="dh-badge dh-badge-type">${escapeHtml(entry.layer_type || 'wms')}</span>`
+    const origin = (entry.origin && entry.origin !== 'config') ? `<span class="dh-badge dh-badge-origin">${escapeHtml(entry.origin)}</span>` : ''
+    return `<div class="dh-row dh-layer-row" onclick="toggleDetail('${entry.id}', event)">
+      <span onclick="event.stopPropagation(); toggleEntry('${entry.id}')" title="${gettext('Enable/disable this layer')}">${_checkHtml(entry.enabled ? 'on' : 'off')}</span>
+      <span class="dh-dot" style="background:${DH_STATUS_COLOR[entry.status] || 'var(--dh-st-disabled)'}" title="${escapeHtml(entry.status || '')}"></span>
+      <span class="dh-name">${escapeHtml(entry.title)}</span>
+      <span class="dh-row-right">
+        <span class="dh-layer-meta">${path}${provider}${type}${origin}</span>
+        <span class="dh-chev${isDetailOpen ? ' open' : ''}" id="arrow-${detailId}">${_chev(16)}</span>
+      </span>
+    </div>
+    <div class="dh-collapsible${isDetailOpen ? ' open' : ''}" id="${detailId}">${buildDetailPanel(entry)}</div>`
+  }
+  function _bulkCheckHtml(entries, tip) {
+    const ids = JSON.stringify(entries.map(e => e.id)).replace(/"/g, '&quot;')
+    const target = _nodeState(entries) !== 'on'
+    return `<span onclick="event.stopPropagation(); bulkToggleEntries(${ids}, ${target})" title="${tip}">${_checkHtml(_nodeState(entries))}</span>`
   }
 
   function onCatalogSearch(value) {
@@ -1710,6 +1810,10 @@
         throw new Error(`Server error ${response.status}`)
       }
       catalogData = await response.json()
+      // Each entry remembers its place in the catalog, for the search and the
+      // by-source view.
+      ;(catalogData.categories || []).forEach(cat => cat.subcategories.forEach(sc =>
+        sc.entries.forEach(e => { e._cat = cat.title; e._sub = sc.title })))
       renderCatalog(expandAll)
     } catch (error) {
       console.error('Failed to load catalog:', error)
@@ -1733,6 +1837,7 @@
     renderSyncStatus(catalogData)
     renderCatalogVersionBanner(catalogData)
     renderTreeChips(catalogData)
+    _syncViewSeg()
 
     const tree = document.getElementById('catalog-tree')
     const categories = catalogData.categories || []
@@ -1752,70 +1857,51 @@
     let html = ''
     let shownLayers = 0
 
-    categories.forEach((cat, ci) => {
-      const catId = 'cat-' + ci
-      const allEntries = cat.subcategories.flatMap(sc => sc.entries)
-      const visSubs = cat.subcategories.map((sc, si) => ({
-        sc, si, vis: sc.entries.filter(e => _matchEntry(e, cat.title, sc.title)),
-      })).filter(x => !searching || x.vis.length > 0)
-      if (searching && visSubs.length === 0) return
+    const bySource = catalogView === 'sources'
+    const groupTip = bySource ? gettext('Check/uncheck all layers from this source') : gettext('Check/uncheck all layers in this category')
+    const childTip = bySource ? gettext('Check/uncheck all layers from this source') : gettext('Check/uncheck all layers in this subcategory')
+    // while searching or filtering, only the matching layers are listed
+    const layerRows = (entries) => {
+      const rows = searching ? entries.filter(_matchEntry) : entries
+      shownLayers += rows.length
+      return rows.map(e => _layerRowHtml(e, bySource)).join('')
+    }
 
-      const catOpen = searching || expandAll || openGroups.has(catId)
-      const enabledEntries = allEntries.filter(e => e.enabled).length
-      const catIds = allEntries.map(e => e.id)
-      const catTarget = _nodeState(allEntries) !== 'on'
+    _viewGroups().forEach(g => {
+      if (searching && !g.entries.some(_matchEntry)) return
+      const open = searching || expandAll || openGroups.has(g.id)
+      const enabledEntries = g.entries.filter(e => e.enabled).length
 
       html += `<div class="dh-cat">
-        <div class="dh-row dh-cat-row" onclick="toggleCollapsible('${catId}')">
-          <span class="dh-chev${catOpen ? ' open' : ''}" id="arrow-${catId}">${_chev(17)}</span>
-          <span onclick="event.stopPropagation(); bulkToggleEntries(${JSON.stringify(catIds).replace(/"/g, '&quot;')}, ${catTarget})" title="${gettext('Check/uncheck all layers in this category')}">${_checkHtml(_nodeState(allEntries))}</span>
-          <span class="dh-cat-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
-          <span class="dh-name">${escapeHtml(cat.title)}</span>
+        <div class="dh-row dh-cat-row" onclick="toggleCollapsible('${g.id}')">
+          <span class="dh-chev${open ? ' open' : ''}" id="arrow-${g.id}">${_chev(17)}</span>
+          ${_bulkCheckHtml(g.entries, groupTip)}
+          <span class="dh-cat-ic">${bySource ? DH_ICON_SOURCE : DH_ICON_CATEGORY}</span>
+          <span class="dh-name">${escapeHtml(g.title)}</span>
           <span class="dh-row-right">
-            ${_miniSegbar(allEntries)}
-            <span class="dh-count"><b>${enabledEntries}</b>/${allEntries.length} ${gettext('enabled')}</span>
+            ${_miniSegbar(g.entries)}
+            <span class="dh-count"><b>${enabledEntries}</b>/${g.entries.length} ${gettext('enabled')}</span>
           </span>
         </div>
-        <div class="dh-collapsible${catOpen ? ' open' : ''}" id="${catId}">`
+        <div class="dh-collapsible${open ? ' open' : ''}" id="${g.id}">`
 
-      visSubs.forEach(({ sc, si, vis }) => {
-        const subcatId = 'subcat-' + ci + '-' + si
-        const subOpen = searching || expandAll || openGroups.has(subcatId)
-        const scEnabled = sc.entries.filter(e => e.enabled).length
-        const scIds = sc.entries.map(e => e.id)
-        const scTarget = _nodeState(sc.entries) !== 'on'
-        const rows = searching ? vis : sc.entries
-
-        html += `<div class="dh-sub">
-          <div class="dh-row dh-sub-row" onclick="toggleCollapsible('${subcatId}')">
-            <span class="dh-chev${subOpen ? ' open' : ''}" id="arrow-${subcatId}">${_chev(16)}</span>
-            <span onclick="event.stopPropagation(); bulkToggleEntries(${JSON.stringify(scIds).replace(/"/g, '&quot;')}, ${scTarget})" title="${gettext('Check/uncheck all layers in this subcategory')}">${_checkHtml(_nodeState(sc.entries))}</span>
-            <span class="dh-name">${escapeHtml(sc.title)}</span>
-            <span class="dh-row-right"><span class="dh-count">${scEnabled}/${sc.entries.length}</span></span>
-          </div>
-          <div class="dh-collapsible${subOpen ? ' open' : ''}" id="${subcatId}"><div class="dh-layers">`
-
-        rows.forEach(entry => {
-          shownLayers++
-          const detailId = 'detail-' + entry.id
-          const isDetailOpen = openGroups.has(detailId)
-          const provider = entry.meta_source ? `<span class="dh-badge dh-badge-provider">${escapeHtml(entry.meta_source)}</span>` : ''
-          const type = `<span class="dh-badge dh-badge-type">${escapeHtml(entry.layer_type || 'wms')}</span>`
-          const origin = (entry.origin && entry.origin !== 'config') ? `<span class="dh-badge dh-badge-origin">${escapeHtml(entry.origin)}</span>` : ''
-          html += `<div class="dh-row dh-layer-row" onclick="toggleDetail('${entry.id}', event)">
-            <span onclick="event.stopPropagation(); toggleEntry('${entry.id}')" title="${gettext('Enable/disable this layer')}">${_checkHtml(entry.enabled ? 'on' : 'off')}</span>
-            <span class="dh-dot" style="background:${DH_STATUS_COLOR[entry.status] || 'var(--dh-st-disabled)'}" title="${escapeHtml(entry.status || '')}"></span>
-            <span class="dh-name">${escapeHtml(entry.title)}</span>
-            <span class="dh-row-right">
-              <span class="dh-layer-meta">${provider}${type}${origin}</span>
-              <span class="dh-chev${isDetailOpen ? ' open' : ''}" id="arrow-${detailId}">${_chev(16)}</span>
-            </span>
-          </div>
-          <div class="dh-collapsible${isDetailOpen ? ' open' : ''}" id="${detailId}">${buildDetailPanel(entry)}</div>`
+      if (!g.children) {
+        html += `<div class="dh-layers dh-layers-flat">${layerRows(g.entries)}</div>`
+      } else {
+        g.children.forEach(c => {
+          if (searching && !c.entries.some(_matchEntry)) return
+          const subOpen = searching || expandAll || openGroups.has(c.id)
+          html += `<div class="dh-sub">
+            <div class="dh-row dh-sub-row" onclick="toggleCollapsible('${c.id}')">
+              <span class="dh-chev${subOpen ? ' open' : ''}" id="arrow-${c.id}">${_chev(16)}</span>
+              ${_bulkCheckHtml(c.entries, childTip)}
+              <span class="dh-name">${escapeHtml(c.title)}</span>
+              <span class="dh-row-right"><span class="dh-count">${c.entries.filter(e => e.enabled).length}/${c.entries.length}</span></span>
+            </div>
+            <div class="dh-collapsible${subOpen ? ' open' : ''}" id="${c.id}"><div class="dh-layers">${layerRows(c.entries)}</div></div>
+          </div>`
         })
-
-        html += `</div></div></div>`
-      })
+      }
 
       html += `</div></div>`
     })

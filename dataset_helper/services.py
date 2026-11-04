@@ -5,12 +5,15 @@ import os
 import re
 import urllib.request
 import uuid
+from urllib.parse import urlparse
 
 from django.contrib.staticfiles import finders
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError, RestrictedError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.text import slugify
+from django.utils.translation import gettext
 from geomanager.models.core import Category, Dataset, Metadata, SubCategory
 from geomanager.models.raster_style import ColorValue, RasterStyle
 from geomanager.models.raster_tile import RasterTileLayer
@@ -1665,15 +1668,96 @@ def clear_provisioned_datasets():
     }
 
 
+# ── Data sources ─────────────────────────────────────────────────────────────
+# The tree UI can also group the catalog by data source rather than by
+# category. A source is derived from what an entry already holds (layer type,
+# service host), so the catalog itself carries no source structure.
+
+# (key, title, hosts): an entry belongs to the source when the host of its
+# service URL is one of `hosts` or a subdomain of one.
+SOURCE_HOSTS = (
+    ('ecmwf', 'ECMWF', ('ecmwf.int',)),
+    ('eumetsat', 'EUMETSAT', ('eumetsat.int',)),
+    ('glofas', 'GloFAS', ('globalfloods.eu',)),
+    ('efas', 'EFAS', ('european-flood.emergency.copernicus.eu',)),
+    ('estation', 'JRC eStation', ('estation.jrc.ec.europa.eu',)),
+)
+OTHER_SOURCE = 'other'
+
+
+def _entry_service_url(entry):
+    if entry.layer_type == 'wms':
+        return entry.wms_url
+    if entry.layer_type in ('raster_tile', 'vector_tile'):
+        return entry.tile_url
+    if entry.layer_type == 'raster_cog':
+        return entry.cog_url_template
+    return entry.file_url
+
+
+def _trailing_group(text):
+    """
+    Content of the parentheses closing ``text``, nested ones included:
+    '850 hPa temperature (GEM Global (upper levels))' → 'GEM Global (upper levels)'.
+    """
+    text = (text or '').rstrip()
+    if not text.endswith(')'):
+        return ''
+    depth = 0
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] == ')':
+            depth += 1
+        elif text[i] == '(':
+            depth -= 1
+            if depth == 0:
+                return text[i + 1:-1].strip()
+    return ''
+
+
+def entry_source(entry, estation_url=''):
+    """
+    Return ``(source, source_title, subsource, subsource_title)`` for an entry.
+
+    Open-Meteo layers are split by weather model, whose label the generated
+    titles end with ("Precipitation (CMA GRAPES Global)"). Entries matching
+    no known source go to "Other sources", split by provider. The other
+    sources have no sub-source: ``subsource`` is then ''. Keys are slugs, as
+    the UI builds element ids from them.
+    """
+    if entry.layer_type == 'openmeteo':
+        domain = entry.openmeteo_domain or 'unknown'
+        return ('openmeteo', 'Open-Meteo', slugify(domain) or 'unknown', _trailing_group(entry.title) or domain)
+
+    url = _entry_service_url(entry) or ''
+    # A local eStation replaces the JRC host (see _substitute_estation_url),
+    # and the flat products format only tags its entries through meta_source.
+    if ((estation_url and url.startswith(estation_url.rstrip('/')))
+            or entry.meta_source == 'JRC eStation'):
+        return ('estation', 'JRC eStation', '', '')
+
+    host = (urlparse(url).hostname or '').lower()
+    for key, title, hosts in SOURCE_HOSTS:
+        if any(host == h or host.endswith('.' + h) for h in hosts):
+            return (key, title, '', '')
+
+    # "WorldPop — University of Southampton" → "WorldPop"
+    provider = (entry.meta_source or '').split(' — ')[0].strip() or host or gettext('Unknown')
+    return (OTHER_SOURCE, gettext('Other sources'), slugify(provider) or 'unknown', provider)
+
+
 def get_catalog_tree():
     """
     Return the full catalog as a nested dict for the tree UI.
-    Structure: categories > subcategories > entries
+    Structure: categories > subcategories > entries. Each entry also carries
+    its data source (see entry_source), from which the UI builds the
+    by-source view.
     """
     entries = CatalogEntry.objects.all()
+    estation_url = PluginSettings.load().estation_url
     tree = {}
 
     for entry in entries:
+        source, source_title, subsource, subsource_title = entry_source(entry, estation_url)
         cat = entry.category_title
         subcat = entry.subcategory_title
 
@@ -1727,6 +1811,10 @@ def get_catalog_tree():
             'meta_function': entry.meta_function,
             'meta_overview': entry.meta_overview,
             'meta_learn_more': entry.meta_learn_more,
+            'source': source,
+            'source_title': source_title,
+            'subsource': subsource,
+            'subsource_title': subsource_title,
         })
 
     # Convert to list, preserving insertion order (driven by DB ordering)
